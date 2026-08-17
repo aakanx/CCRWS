@@ -1,0 +1,753 @@
+---
+fig-width: 8
+fig-height: 4.4
+output-file: "Survey-2026-Employee"
+---
+
+```{r}
+#| include: false
+
+library(tidyverse)
+source("source_qmd.R")
+source_qmd("1-functions.qmd")
+source_qmd("2-dict.qmd")
+```
+
+```{r}
+#| label: employee-read
+#| include: false
+
+employee_1 <- read_csv(".data/employee-2026-06-03-1132.csv") |>
+  filter(landing_page_complete == 2) |> 
+  rename(
+    "employee_1_complete" = "form_1_complete",
+    "employee_2_1_complete" = "section_a2_role_workforce_context_35009f_complete",
+    "employee_2_2_complete" = "section_a2_role_workforce_context_complete",
+    "employee_2_3_complete" =
+      "section_c_retention_burnout_career_intentions_complete"
+  ) |> 
+  select(
+    -landing_page_complete,
+    -section_d_opentext_questions_complete,
+    -ends_with("timestamp"),
+    -ends_with("999") # "PNTA"
+  ) |>
+  mutate(
+    across(-record_id, \(x) fct_inseq(as.character(x))),
+    across(
+      -record_id,
+      \(x) fct_recode(x, NULL = "999")
+    ), # "PNTA"
+    across(
+      c(career_ladder, career_support, career_workload, career_crdtl),
+      \(x) fct_recode(x, NULL = "6")
+    ), # "N/A"
+    across(
+      c(num_range("unemp_jobsearch___", 1:5)),
+      \(x) replace_when(x, unemp_jobsearch___6 == "1" ~ "0")
+    )
+  ) |>
+  select(-unemp_jobsearch___6)
+```
+
+```{r}
+#| label: employee-filter-reshape
+#| include: false
+
+employee_2 <- c(
+  set_names(columns$employee_single_select) |> 
+    map(\(x) {
+      employee_1 |> 
+        filter_section_complete(x) |>
+        drop_na(all_of(x)) |> 
+        select(record_id, all_of(x))
+    }),
+  set_names(columns$employee_multi_select) |> 
+    map(\(x) {
+      employee_1 |> 
+        filter_section_complete(x) |> 
+        pivot_longer_1(x)
+    })
+)
+```
+
+```{r}
+#| label: n-respondents
+#| include: false
+
+n_respondents <- c(
+  set_names(columns$employee_single_select) |>
+    map(\(x) {
+      employee_2[[x]] |>
+        nrow()
+    }),
+  set_names(columns$employee_multi_select) |>
+    map(\(x) {
+      employee_2[[x]] |>
+        pull(record_id) |>
+        n_distinct()
+    })
+)
+```
+
+```{r}
+#| label: employee-count-pct
+#| include: false
+
+employee <- set_names(columns$employee) |> 
+  map(\(x) {
+    column <- names(employee_2[[x]])[2]
+    employee_2[[x]] |> 
+      count(.data[[column]], name = "count") |> 
+      mutate(pct = count / n_respondents[[x]])
+  })
+
+rm(employee_1, employee_2)
+```
+
+## Employee
+
+### Demographics
+
+:::::::: panel-tabset
+#### Gender
+
+```{r}
+#| label: demog-gen
+
+employee$demog_gen |> 
+  top_n(2, drop_other = FALSE) |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$demog_gen) +
+  labs(title = "Gender")
+```
+
+#### Age
+
+```{r}
+#| label: demog-age
+
+employee$demog_age |>
+  ggplot_1() +
+  scale_x_discrete(
+    labels = choices$demog_age |>
+      str_replace("Under ", "<")
+  ) +
+  labs(title = "Age")
+```
+
+#### Location
+
+```{r}
+#| label: demog-locat
+
+employee$demog_locat |>
+  mutate(
+    demog_locat = demog_locat |>
+      fct_reorder(-count) |> 
+      fct_lump_prop(0.01, count)
+  ) |>
+  count(demog_locat, wt = count, name = "count") |> 
+  mutate(pct = count / n_respondents$demog_locat) |> 
+  ggplot_1(geom_text_size = 3.4) +
+  scale_x_discrete(
+    labels = c(
+      "1" = "National /\nPan-Canadian",
+      "2" = "AB",
+      "3" = "BC",
+      "4" = "MB",
+      "5" = "NB",
+      "6" = "NL",
+      "7" = "QC",
+      "8" = "NS",
+      "9" = "ON",
+      "10" = "PE",
+      "11" = "SK",
+      "12" = "NT",
+      "13" = "NU",
+      "14" = "YT"
+    )
+  ) +
+  labs(title = "Location")
+```
+
+#### Indigenous
+
+```{r}
+#| label: demog-indig
+
+employee$demog_indig |>
+  mutate(demog_indig = demog_indig |> fct_reorder(-count)) |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$demog_indig) +
+  labs(title = "Do you identify as Indigenous (First Nations, Métis, Inuit)?")
+```
+
+#### Minority
+
+::: panel-tabset
+##### 1
+
+```{r}
+#| label: demog-minority
+
+#| fig-height: 4.6
+
+employee$demog_minority |>
+  mutate(demog_minority = demog_minority |> fct_reorder(-count)) |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$demog_minority) +
+  labs(
+    title = get_question("demog_minority") |>
+      str_remove("^.*\n"),
+    caption = get_question("demog_minority") |>
+      str_remove(" \n.*$") |>
+      str_wrap()
+  ) +
+  theme(plot.caption = element_text(hjust = 0.5))
+```
+
+##### 2
+
+```{r}
+#| label: demog-popu
+
+# Branching Logic [demog_minority]='1'
+
+employee$demog_popu |>
+  mutate(
+    demog_popu = demog_popu |>
+      fct_reorder(-count) |>
+      fct_relevel("12", after = Inf)
+  ) |>
+  ggplot_1(geom_text_size = 3.2) +
+  scale_x_discrete(
+    labels = choices$demog_popu |> 
+      c("12" = "Other") |> 
+      str_split_i("\\.| \\(", 1) |> 
+      str_wrap(5),
+    # guide = guide_axis(angle = 45),
+    # expand = expansion(mult = c(0.1, 0.1))
+  ) +
+  labs(title = "Which population group(s) do you identify with?")
+```
+:::
+
+#### Disability
+
+::: panel-tabset
+##### 1
+
+```{r}
+#| label: demog-disability
+
+employee$demog_disability |>
+  mutate(demog_disability = demog_disability |> fct_reorder(-count)) |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$demog_disability) +
+  labs(title = "Do you identify as a person with a disability?")
+```
+
+##### 2
+
+```{r}
+#| label: demog-disability-typ
+
+# Branching Logic [demog_disability]='1'
+
+employee$demog_disability_typ |>
+  top_n(3) |>
+  ggplot_1() +
+  scale_x_discrete(
+    labels = choices$demog_disability_typ |> 
+      c("8" = "Mental health", 
+        "10" = "Pain", 
+        "12" = "Other"),
+    # guide = guide_axis(angle = 45),
+    # expand = expansion(mult = c(0.11, 0.11))
+  ) +
+  labs(
+    title = "Which disability types apply to you?",
+    caption = "top 3 selections"
+  )
+```
+:::
+
+#### Language
+
+```{r}
+#| label: demog-lang
+
+employee$demog_lang |> 
+  ggplot_1() +
+  scale_x_discrete(labels = choices$demog_lang) +
+  labs(
+    title = get_question("demog_lang") |> 
+      str_split_i(" \\(", 1)
+  )
+```
+
+#### Education
+
+::: panel-tabset
+##### 1
+
+```{r}
+#| label: demog-iehp
+
+# Branching Logic [demog_employ_typ]<>'6'
+
+employee$demog_iehp |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$demog_iehp) +
+  labs(
+    title = get_question("demog_iehp") |>
+      str_split_i(" \n", 2),
+  )
+```
+
+##### 2
+
+```{r}
+#| label: demog-edu
+
+employee$demog_edu |>
+  mutate(
+    demog_edu = demog_edu |> 
+      fct_reorder(-count) |>
+      fct_relevel("77", after = Inf)
+  ) |> 
+  ggplot_1() +
+  scale_x_discrete(
+    labels = choices$demog_edu |> 
+      str_split_i(" \\(.*\\)", 1) |> 
+      str_wrap(17),
+    # guide = guide_axis(angle = 45)
+  ) +
+  labs(
+    title = get_question("demog_edu") |>
+      str_wrap(40),
+  )
+```
+
+##### 3
+
+```{r}
+#| label: demog-cr
+
+employee$demog_cr |>
+  mutate(demog_cr = demog_cr |> fct_reorder(-count)) |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$demog_cr) +
+  labs(title = "Have you completed a post-graduate diploma,\ncertificate, or degree in Clinical Research?")
+```
+
+##### 4
+
+```{r}
+#| label: demog-cr-cert
+
+employee$demog_cr_cert |>
+  mutate(demog_cr_cert = demog_cr_cert |> fct_reorder(-count)) |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$demog_cr_cert) +
+  labs(title = "Do you currently hold any professional certifications\nrelated to Clinical Research?")
+```
+:::
+
+#### Employment
+
+::: panel-tabset
+##### 1
+
+```{r}
+#| label: demog-employ-typ
+
+employee$demog_employ_typ |>
+  mutate(
+    demog_employ_typ = demog_employ_typ |> 
+      fct_reorder(-count) |> 
+      fct_relevel("6", after = Inf)
+  ) |>
+  ggplot_1() +
+  scale_x_discrete(
+    labels = c(choices$demog_employ_typ, "6" = "Unemployed") |>
+      str_wrap(15)
+  ) +
+  labs(title = get_question("demog_employ_typ"))
+```
+
+##### 2
+
+```{r}
+#| label: demog-sector
+
+# Branching Logic [demog_employ_typ]<>'6'
+
+employee$demog_sector |>
+  mutate(
+    demog_sector = demog_sector |>
+      fct_reorder(-count) |>
+      fct_lump_min(6, count) |> 
+      fct_other(drop = "77")
+  ) |>
+  count(demog_sector, wt = count, name = "count") |> 
+  mutate(pct = count / n_respondents$demog_sector) |> 
+  ggplot_1() +
+  scale_x_discrete(
+    labels = choices$demog_sector |>
+      str_split_i("\\.|: | \\[| \\(", 1) |>
+      str_replace("/", " / ") |>
+      str_wrap(15),
+    # guide = guide_axis(angle = 45),
+    # expand = expansion(mult = c(0.1, 0.1))
+  ) +
+  labs(
+    title = get_question("demog_sector"),
+    caption = "categories with ≤ 5 respondents grouped into \"Other\""
+  )
+```
+
+##### 3
+
+```{r}
+#| label: demog-commun
+
+# Branching Logic [demog_employ_typ]<>'6'
+
+employee$demog_commun |> 
+  ggplot_1() +
+  scale_x_discrete(
+    labels = choices$demog_commun |>
+      c("4" = "Rural/Northern") |>
+      str_split_i(" \\(", 1)
+  ) +
+  labs(
+    title = get_question("demog_commun") |>
+      str_wrap(45)
+  )
+```
+
+##### 4
+
+```{r}
+#| label: demog-role
+
+# Branching Logic [demog_employ_typ]<>'6'
+
+employee$demog_role |> 
+  mutate(demog_role = demog_role |> fct_reorder(-count)) |>
+  ggplot_1() +
+  scale_x_discrete(
+    labels = choices$demog_role |> 
+      str_split_i(" \\(", 1) |>
+      str_replace_all(" \\&", ",") |>
+      str_replace(" / ", "/") |>
+      str_wrap(20)
+  ) +
+  labs(title = "Which of these best describe(s) your role?")
+```
+:::
+
+#### Experience
+
+::: panel-tabset
+##### 1
+
+```{r}
+#| label: demog-wrk-yr
+
+employee$demog_wrk_yr |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$demog_wrk_yr) +
+  labs(title = get_question("demog_wrk_yr"))
+```
+
+##### 2
+
+```{r}
+#| label: demog-current-wrk
+
+# Branching Logic [demog_employ_typ]<>'6'
+
+employee$demog_current_wrk |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$demog_current_wrk) +
+  labs(title = get_question("demog_current_wrk"))
+```
+:::
+::::::::
+
+### Perspectives
+
+:::::::: panel-tabset
+#### Role context
+
+::: panel-tabset
+##### 1
+
+```{r}
+#| label: role-jobmatch
+
+employee$role_jobmatch |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$role_jobmatch) +
+  labs(
+    title = get_question("role_jobmatch") |>
+      str_wrap(55),
+  )
+```
+
+##### 2
+
+```{r}
+#| label: role-compensation
+
+employee$role_compensation |> 
+  ggplot_1() +
+  scale_x_discrete(labels = choices$role_compensation) +
+  labs(
+    title = get_question("role_compensation")|> 
+      str_wrap(65)
+  )
+```
+
+##### 3
+
+```{r}
+#| label: role-overtime
+
+employee$role_overtime |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$role_overtime) +
+  labs(
+    title = get_question("role_overtime") |>
+      str_wrap(55)
+  )
+```
+
+##### 4
+
+```{r}
+#| label: role-complex
+
+employee$role_complex |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$role_complex) +
+  labs(
+    title = get_question("role_complex") |>
+      str_wrap(40)
+  )
+```
+:::
+
+#### Career advancement
+
+::: panel-tabset
+##### 1
+
+```{r}
+#| label: career-ladder
+
+employee$career_ladder |> 
+  ggplot_1() +
+  scale_x_discrete(labels = choices$career_ladder) +
+  labs(
+    title = get_question("career_ladder") |>
+      str_wrap(70)
+  )
+```
+
+##### 2
+
+```{r}
+#| label: career-support
+
+employee$career_support |> 
+  ggplot_1() +
+  scale_x_discrete(labels = choices$career_support) +
+  labs(
+    title = get_question("career_support") |>
+      str_remove("\\(.*\\) ") |>
+      str_wrap(70)
+  )
+```
+
+##### 3
+
+```{r}
+#| label: career-workload
+
+employee$career_workload |> 
+  ggplot_1() +
+  scale_x_discrete(labels = choices$career_workload) +
+  labs(
+    title = get_question("career_workload") |>
+      str_remove_all("'") |>
+      str_wrap()
+  )
+```
+
+##### 4
+
+```{r}
+#| label: career-crdtl
+
+employee$career_crdtl |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$career_crdtl) +
+  labs(
+    title = get_question("career_crdtl") |>
+      str_wrap()
+  )
+```
+:::
+
+#### Team capacity
+
+::: panel-tabset
+##### 1
+
+```{r}
+#| label: ret-max
+
+employee$ret_max |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$ret_max) +
+  labs(
+    title = get_question("ret_max") |>
+      str_wrap()
+  )
+```
+
+##### 2
+
+```{r}
+#| label: ret-struggle
+
+employee$ret_struggle |> 
+  ggplot_1() +
+  scale_x_discrete(labels = choices$ret_struggle) +
+  labs(
+    title = get_question("ret_struggle") |>
+      str_wrap()
+  )
+```
+:::
+
+#### Job change
+
+::: panel-tabset
+##### 1
+
+```{r}
+#| label: career-leav
+
+employee$career_leav |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$career_leav) +
+  labs(
+    title = get_question("career_leav") |> 
+      str_wrap(53),
+  )
+```
+
+##### 2
+
+```{r}
+#| label: career-int
+
+# Branching Logic [career_leav]='1'
+
+employee$career_int |>
+  top_n(5) |> 
+  ggplot_1() +
+  scale_x_discrete(
+    labels = choices$career_int |> 
+      str_replace("/", " / ") |>
+      str_wrap(24),
+    # expand = expansion(mult = c(0, 0))
+  ) +
+  labs(
+    title = "What are the primary factors influencing your decision\nto look for a new role or leave your current position?",
+    caption = "top 5 selections"
+  )
+```
+:::
+
+#### Unemployed
+
+::: panel-tabset
+##### 1
+
+```{r}
+#| label: unemp-challeng
+
+# Branching Logic [demog_employ_typ]='6'
+
+employee$unemp_challeng |>
+  top_n(5) |> 
+  ggplot_1() +
+  scale_x_discrete(
+    labels = choices$unemp_challeng |> c(
+      "6" = "Limited professional\nnetwork",
+      "7" = "Competition\ntoo high",
+      "4" = "Lacking relevant\nexperience",
+      "1" = "No recognition of\ninternational\neducation/experience",
+      "2" = "Not enough jobs\navailable"
+    ) # |> str_wrap(14)
+  ) +
+  labs(
+    title = get_question("unemp_challeng") |>
+      str_wrap(45),
+    caption = "top 5 selections"
+  )
+```
+
+##### 2
+
+```{r}
+#| label: unemp-miss
+
+# Branching Logic [demog_employ_typ]='6'
+
+employee$unemp_miss |>
+  top_n(5) |> 
+  ggplot_1() +
+  scale_x_discrete(
+    labels = c(
+      "1" = "Hands-on experience\n(placements/internships)",
+      "2" = "Understanding how\nClinical Research\nworks in Canada",
+      "3" = "Training on GCP /\nethics / regulations",
+      "4" = "Help with resume,\ninterview preparation",
+      "5" = "Networking\nopportunities\nwith employers",
+      "6" = "Mentorship\nfrom experienced\nprofessionals",
+      "7" = "Bridging programs\nfor internationally\ntrained professionals",
+      "8" = "Clearer\ncareer pathways,\nrole descriptions",
+      "9" = "Access to\ncertifications",
+      "99" = "Other"
+    ),
+    # guide = guide_axis(n.dodge = 2),
+    # expand = expansion(mult = c(0.1, 0.1))
+  ) +
+  labs(
+    title = get_question("unemp_miss") |>
+      str_wrap(60),
+    caption = "top 5 selections"
+  )
+```
+
+##### 3
+
+```{r}
+#| label: unemp-jobsearch
+
+# Branching Logic [demog_employ_typ]='6'
+
+employee$unemp_jobsearch |> 
+  ggplot_1() +
+  scale_x_discrete(labels = choices$unemp_jobsearch) +
+  labs(title = get_question("unemp_jobsearch"))
+```
+:::
+::::::::

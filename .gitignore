@@ -1,0 +1,6 @@
+.*
+!.gitignore
+*.Rproj
+/*_cache/
+/*_files/
+/rsconnect/

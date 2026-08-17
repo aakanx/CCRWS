@@ -1,0 +1,80 @@
+## dict
+
+```{r}
+#| label: dict
+
+dict <- read_csv(".data/dictionary-2026-04-18.csv") |>
+  janitor::clean_names() |>
+  # select(-where(\(x) all(is.na(x)))) |>
+  select(
+    field_name = variable_field_name,
+    form_name,
+    field_type,
+    field_label,
+    choices = choices_calculations_or_slider_labels
+    # other columns with potentially useful information:
+    # section_header, field_note, branching_logic, 
+    # required_field, matrix_group_name, field_annotation
+  ) |>
+  filter_out(field_type %in% c("descriptive", "text", "notes")) |>
+  mutate(
+    form_name = form_name |> replace_values(
+      "form_1" ~ "employee_1",
+      "section_a2_role_workforce_context_35009f" ~ "employee_2_1",
+      "section_a2_role_workforce_context" ~ "employee_2_2",
+      "section_c_retention_burnout_career_intentions" ~ "employee_2_3",
+      "national_workforce_employer_survey" ~ "employer"
+    ),
+    choices = choices |> replace_when(
+      field_type == "yesno" ~ "0, No | 1, Yes"
+    ),
+    field_label = field_label |> str_replace_all(
+      "clinical research", "Clinical Research"
+    )
+  )
+```
+
+```{r}
+#| label: columns
+
+columns <- list(
+  employee = dict |> 
+    filter_out(form_name == "employer") |>
+    pull(field_name),
+  employee_single_select = dict |>
+    filter_out(form_name == "employer") |> 
+    filter_out(field_type == "checkbox") |> 
+    pull(field_name),
+  employee_multi_select = dict |>
+    filter_out(form_name == "employer") |> 
+    filter(field_type == "checkbox") |> 
+    pull(field_name),
+  employer = dict |> 
+    filter(form_name == "employer") |>
+    pull(field_name),
+  employer_single_select = dict |>
+    filter(form_name == "employer") |> 
+    filter_out(field_type == "checkbox") |> 
+    pull(field_name),
+  employer_multi_select = dict |>
+    filter(form_name == "employer") |> 
+    filter(field_type == "checkbox") |> 
+    pull(field_name)
+)
+```
+
+```{r}
+#| label: choices
+
+choices <- dict |>
+  pull(field_name) |>
+  set_names() |>
+  map(get_choices)
+
+choices <- choices |>
+  map(\(x) {
+    if (any(str_detect(x, "Neither Agree nor Disagree"))) {
+      str_to_sentence(x)
+    } else x
+  })
+```

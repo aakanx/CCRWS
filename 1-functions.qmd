@@ -1,0 +1,155 @@
+## functions
+
+```{r}
+#| label: filter-section-complete
+
+filter_section_complete <- function(data, column) {
+  section_complete <- dict |> 
+    filter(field_name == column) |> 
+    pull(form_name) |> 
+    paste0("_complete")
+  data |> 
+    filter(.data[[section_complete]] == 2)
+}
+```
+
+```{r}
+#| label: get-question
+
+get_question <- function(column) {
+  dict |>
+    filter(field_name == column) |>
+    pull(field_label)
+}
+```
+
+```{r}
+#| label: get-choices
+
+get_choices <- function(column) {
+  matrix <- dict |> 
+    filter(field_name == column) |>
+    pull(choices) |>
+    str_split_1(" \\| ") |>
+    str_split_fixed(", ", n = 2)
+  set_names(
+    nm = matrix[ ,1],
+    x = matrix[ ,2]
+  )
+}
+```
+
+```{r}
+#| label: pivot-longer-1
+
+pivot_longer_1 <- function(data, column) {
+  data |>
+    select(record_id, starts_with(column)) |>
+    pivot_longer(
+      cols = -record_id,
+      names_prefix = paste0(column, "___"),
+      names_to = column,
+      values_to = "is_selected",
+    ) |>
+    filter(is_selected == 1) |>
+    select(-is_selected) |>
+    mutate(across(all_of(column), fct_inseq))
+}
+```
+
+```{r}
+#| label: top-n
+
+top_n <- function(data, n, drop_other = TRUE) {
+  column <- names(data)[1]
+  data <- data |> mutate(across(all_of(column), \(x) {
+    x |> 
+      fct_lump_n(n, count) |> 
+      fct_reorder(-count)
+  }))
+  if (drop_other == FALSE) {
+    data |> 
+      count(.data[[column]], wt = count, name = "count") |> 
+      mutate(pct = count / n_respondents[[column]])
+  } else {
+    data |> 
+      filter_out(.data[[column]] == "Other")
+  }
+}
+
+top_n_simple <- function(data, n) {
+  column <- names(data)[1]
+  data |> 
+    mutate(across(all_of(column), \(x) {
+      x |> fct_lump_n(n, count) |> fct_reorder(-count)
+    })) |>
+    filter_out(.data[[column]] == "Other")
+}
+```
+
+```{r}
+#| label: theme-1
+
+theme_1 <- function(...) {
+  theme_classic() +
+    theme(
+      axis.title.y = element_blank(),
+      axis.text.y = element_blank(),
+      axis.ticks.y = element_blank(),
+      axis.line.y = element_blank(),
+      axis.title.x = element_blank(),
+      plot.title = element_text(hjust = 0.5),
+      plot.subtitle = element_text(hjust = 0.5),
+      plot.caption = element_text(colour = scales::alpha("black", alpha = 0.65)),
+      ...
+    )
+}
+```
+
+```{r}
+#| label: theme-2
+
+# for Likert plots
+
+theme_2 <- function(...) {
+  theme(
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid = element_blank(),
+    panel.border = element_blank(),
+    legend.key.size = unit(1, "lines"),
+    plot.title = element_text(
+      # size = 10, 
+      # face = "bold", 
+      hjust = 0.5
+    ),
+    plot.subtitle = element_text(
+      # size = 10, 
+      hjust = 0.5
+    ),
+    ...
+  )
+}
+```
+
+```{r}
+#| label: ggplot-1
+
+ggplot_1 <- function(data, geom_text_size = get_geom_defaults(geom_text)$size) {
+  column <- names(data)[1]
+  n <- n_respondents[[column]]
+  data$pct <- scales::label_percent(accuracy = 1)(data$pct)
+  data |>
+    ggplot(aes(x = .data[[column]], y = count, fill = .data[[column]])) +
+    geom_col() +
+    geom_text(
+      aes(label = str_glue("{count} ({pct})")),
+      vjust = -0.5,
+      size = geom_text_size
+    ) +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+    scale_fill_viridis_d(option = "viridis", guide = "none") +
+    labs(subtitle = paste0("n = ", n)) +
+    theme_1()
+}
+```
