@@ -138,8 +138,8 @@ theme_2 <- function(...) {
 ggplot_1 <- function(data, geom_text_size = get_geom_defaults(geom_text)$size) {
   column <- names(data)[1]
   n <- n_respondents[[column]]
-  data$pct <- scales::label_percent(accuracy = 1)(data$pct)
   data |>
+    mutate(pct = scales::label_percent(accuracy = 1)(pct)) |> 
     ggplot(aes(x = .data[[column]], y = count, fill = .data[[column]])) +
     geom_col() +
     geom_text(

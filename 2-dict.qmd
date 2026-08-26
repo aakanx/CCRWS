@@ -31,7 +31,8 @@ dict <- read_csv(".data/dictionary-2026-04-18.csv") |>
     field_label = field_label |> str_replace_all(
       "clinical research", "Clinical Research"
     )
-  )
+  ) |> 
+  arrange(form_name, field_name)
 ```
 
 ```{r}
@@ -73,7 +74,7 @@ choices <- dict |>
 
 choices <- choices |>
   map(\(x) {
-    if (any(str_detect(x, "Neither Agree nor Disagree"))) {
+    if (any(str_detect(x, "Neither Agree nor Disagree|Not a Barrier"))) {
       str_to_sentence(x)
     } else x
   })

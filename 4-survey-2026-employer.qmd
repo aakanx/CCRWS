@@ -1,0 +1,429 @@
+---
+fig-width: 8
+fig-height: 4.4
+output-file: "Survey-2026-Employer"
+---
+
+```{r}
+#| include: false
+
+library(tidyverse)
+source("source_qmd.R")
+source_qmd("1-functions.qmd")
+source_qmd("2-dict.qmd")
+```
+
+```{r}
+#| label: employer-read
+#| include: false
+
+employer_1 <- read_csv(".data/employer-2026-06-03-1645.csv") |>
+  filter(national_workforce_employer_survey_complete == 2) |>
+  select(
+    -redcap_event_name,
+    -redcap_survey_identifier,
+    -landing_page_timestamp,
+    -landing_page_complete,
+    -national_workforce_employer_survey_timestamp,
+    -national_workforce_employer_survey_complete
+  ) |>
+  mutate(across(-record_id, \(x) fct_inseq(as.character(x))))
+```
+
+```{r}
+#| label: employer-filter-reshape
+#| include: false
+
+employer_2 <- c(
+  set_names(columns$employer_single_select) |> 
+    map(\(x) {
+      employer_1 |>
+        drop_na(all_of(x)) |> 
+        select(record_id, all_of(x))
+    }),
+  set_names(columns$employer_multi_select) |> 
+    map(\(x) {
+      employer_1 |> 
+        pivot_longer_1(x)
+    })
+)
+```
+
+```{r}
+#| label: n-respondents
+#| include: false
+
+n_respondents <- c(
+  set_names(columns$employer_single_select) |> 
+    map(\(x) {
+      employer_2[[x]] |> 
+        nrow()
+    }),
+  set_names(columns$employer_multi_select) |> 
+    map(\(x) {
+      employer_2[[x]] |>
+        pull(record_id) |> 
+        n_distinct()
+    })
+)
+```
+
+```{r}
+#| label: employer-count-pct
+#| include: false
+
+employer <- set_names(columns$employer) |> 
+  map(\(x) {
+    column <- names(employer_2[[x]])[2]
+    employer_2[[x]] |> 
+      count(.data[[column]], name = "count") |> 
+      mutate(pct = count / n_respondents[[x]])
+  })
+
+rm(employer_1, employer_2)
+```
+
+## Employer
+
+### Characteristics
+
+::: panel-tabset
+#### 1
+
+```{r}
+#| label: emp-org-scale
+
+employer$emp_org_scale |>
+  ggplot_1() +
+  scale_x_discrete(
+    labels = choices$emp_org_scale |>
+      str_remove_all("^.*: | -.*$")
+  ) +
+  labs(
+    title = get_question("emp_org_scale") |>
+      str_wrap(55)
+  )
+```
+
+#### 2
+
+```{r}
+#| label: emp-org-typ
+
+employer$emp_org_typ |>
+  ggplot_1() +
+  scale_x_discrete(
+    labels = choices$emp_org_typ |>
+      str_remove(":.*$") |>
+      str_replace("/", " / ") |>
+      str_wrap(15)
+  ) +
+  labs(title = get_question("emp_org_typ"))
+```
+
+#### 3
+
+```{r}
+#| label: emp-org-prov
+
+employer$emp_org_prov |>
+  mutate(emp_org_prov = emp_org_prov |> fct_reorder(-count)) |>
+  ggplot_1() +
+  scale_x_discrete(
+    labels = choices$emp_org_prov |>
+      str_replace("/ ", " /\n")
+  ) +
+  labs(title = "Where in Canada does your organization conduct Clinical Research operations?")
+```
+
+#### 4
+
+```{r}
+#| label: emp-site
+
+employer$emp_site |>
+  ggplot_1() +
+  scale_x_discrete(
+    labels = choices$emp_site |>
+      c("4" = "Rural/Northern") |>
+      str_remove(" \\(.*\\)")
+  ) +
+  labs(title = get_question("emp_site"))
+```
+
+#### 5
+
+```{r}
+#| label: emp-certif
+
+employer$emp_certif |>
+  ggplot_1() +
+  scale_x_discrete(
+    labels = choices$emp_certif |> 
+      str_replace("clinical research staff.", "Clinical Research staff") |>
+      str_wrap(30)
+  ) +
+  labs(
+    title = get_question("emp_certif") |>
+      str_remove(" %") |>
+      str_wrap(75)
+  )
+```
+:::
+
+### Trends
+
+::: panel-tabset
+#### 1
+
+```{r}
+#| label: emp-applic-trend
+
+employer$emp_applic_trend |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$emp_applic_trend) +
+  labs(title = get_question("emp_applic_trend"))
+```
+
+#### 2
+
+```{r}
+#| label: emp-post-fill
+
+employer$emp_post_fill |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$emp_post_fill) +
+  labs(
+    title = get_question("emp_post_fill") |>
+      str_remove(" \\(.*\\)") |>
+      str_wrap(84)
+  )
+```
+
+#### 3
+
+```{r}
+#| label: emp-indep
+
+employer$emp_indep |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$emp_indep) +
+  labs(
+    title = get_question("emp_indep") |>
+      str_wrap(60)
+  )
+```
+:::
+
+### Turnover
+
+::: panel-tabset
+#### 1
+
+```{r}
+#| label: emp-turnover-rate
+
+employer$emp_turnover_rate |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$emp_turnover_rate) +
+  labs(
+    title = get_question("emp_turnover_rate") |>
+      str_wrap(58)
+  )
+```
+
+#### 2
+
+```{r}
+#| label: emp-resig
+
+employer$emp_resig |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$emp_resig) +
+  labs(title = get_question("emp_resig"))
+```
+
+#### 3
+
+```{r}
+#| label: emp-termi
+
+employer$emp_termi |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$emp_termi) +
+  labs(
+    title = get_question("emp_termi") |>
+      str_replace("/", ", ")
+  )
+```
+:::
+
+### Perspectives
+
+::: panel-tabset
+#### 1
+
+```{r}
+#| label: emp-limit-trial
+
+employer$emp_limit_trial |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$emp_limit_trial) +
+  labs(title = get_question("emp_limit_trial"))
+```
+
+#### 2
+
+```{r}
+#| label: emp-demand
+
+employer$emp_demand |>
+  mutate(
+    emp_demand = emp_demand |> 
+      fct_expand("1", after = 0)
+  ) |>
+  ggplot_1() +
+  scale_x_discrete(
+    drop = FALSE,
+    labels = choices$emp_demand
+  ) +
+  labs(
+    title = get_question("emp_demand") |>
+      str_wrap(50)
+  )
+```
+
+#### 3
+
+```{r}
+#| label: emp-shortage
+
+employer$emp_shortage |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$emp_shortage) +
+  labs(title = get_question("emp_shortage"))
+```
+
+#### 4
+
+```{r}
+#| label: emp-missed-trial
+
+employer$emp_missed_trial |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$emp_missed_trial) +
+  labs(title = get_question("emp_missed_trial"))
+```
+
+#### 5
+
+```{r}
+#| label: emp-strategy
+
+employer$emp_strategy |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$emp_strategy) +
+  labs(
+    title = get_question("emp_strategy") |> 
+      str_wrap(85)
+  )
+```
+:::
+
+### Barriers to recruiting qualified staff
+
+::: panel-tabset
+#### 1
+
+```{r}
+#| label: emp-sal
+
+employer$emp_sal |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$emp_sal) +
+  labs(
+    title = get_question("emp_sal") |>
+      str_replace(": ", ":\n")
+  )
+```
+
+#### 2
+
+```{r}
+#| label: emp-qual
+
+employer$emp_qual |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$emp_qual) +
+  labs(
+    title = get_question("emp_qual") |>
+      str_replace(": ", ":\n") |>
+      str_remove(" or ")
+  )
+```
+
+#### 3
+
+```{r}
+#| label: emp-contr
+
+employer$emp_contr |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$emp_contr) +
+  labs(
+    title = get_question("emp_contr") |>
+      str_replace(": ", ":\n") |>
+      str_replace("roles", "roles\\.")
+  )
+```
+
+#### 4
+
+```{r}
+#| label: emp-geo
+
+employer$emp_geo |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$emp_geo) +
+  labs(
+    title = get_question("emp_geo") |>
+      str_replace(": ", ":\n")
+  )
+```
+
+#### 5
+
+```{r}
+#| label: emp-pipe
+
+employer$emp_pipe |>
+  ggplot_1() +
+  scale_x_discrete(labels = choices$emp_pipe) +
+  labs(
+    title = get_question("emp_pipe") |>
+      str_replace(": ", ":\n") |>
+      str_replace_all("\"", "")
+  )
+```
+
+#### 6
+
+```{r}
+#| label: emp-reput
+
+employer$emp_reput |>
+  mutate(
+    emp_reput = emp_reput |>
+      fct_expand("4", after = 3)
+  ) |>
+  ggplot_1() +
+  scale_x_discrete(
+    drop = FALSE,
+    labels = choices$emp_reput
+  ) +
+  labs(
+    title = get_question("emp_reput") |>
+      str_replace(": ", ":\n")
+  )
+```
+:::
