@@ -14,7 +14,7 @@ source_qmd("2-dict.qmd")
 ```
 
 ```{r}
-#| label: employer-read
+#| label: employer-import
 #| include: false
 
 employer_1 <- read_csv(".data/employer-2026-06-03-1645.csv") |>

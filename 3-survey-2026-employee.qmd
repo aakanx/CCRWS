@@ -14,7 +14,7 @@ source_qmd("2-dict.qmd")
 ```
 
 ```{r}
-#| label: employee-read
+#| label: employee-import
 #| include: false
 
 employee_1 <- read_csv(".data/employee-2026-06-03-1132.csv") |>
@@ -29,42 +29,40 @@ employee_1 <- read_csv(".data/employee-2026-06-03-1132.csv") |>
   select(
     -landing_page_complete,
     -section_d_opentext_questions_complete,
-    -ends_with("timestamp"),
-    -ends_with("999") # "PNTA"
+    -ends_with("timestamp")
   ) |>
-  mutate(
-    across(-record_id, \(x) fct_inseq(as.character(x))),
-    across(
-      -record_id,
-      \(x) fct_recode(x, NULL = "999")
-    ), # "PNTA"
-    across(
-      c(career_ladder, career_support, career_workload, career_crdtl),
-      \(x) fct_recode(x, NULL = "6")
-    ), # "N/A"
-    across(
-      c(num_range("unemp_jobsearch___", 1:5)),
-      \(x) replace_when(x, unemp_jobsearch___6 == "1" ~ "0")
-    )
-  ) |>
-  select(-unemp_jobsearch___6)
+  mutate(across(-record_id, \(x) fct_inseq(as.character(x))))
 ```
 
 ```{r}
-#| label: employee-filter-reshape
+#| label: employee-clean-filter-reshape
 #| include: false
+
+employee_2 <- employee_1 |>
+  select(-ends_with("999")) |> # "PNTA"
+  mutate(
+    across(-record_id, \(x) {
+      fct_recode(x, NULL = "999") # "PNTA"
+    }),
+    across(c(career_ladder, career_support, career_workload, career_crdtl), \(x) {        fct_recode(x, NULL = "6") # "N/A"
+    }),
+    across(c(num_range("unemp_jobsearch___", 1:5)), \(x) {
+      replace_when(x, unemp_jobsearch___6 == "1" ~ "0") # equivalent to "N/A"
+    })
+  ) |>
+  select(-unemp_jobsearch___6) # equivalent to "N/A"
 
 employee_2 <- c(
   set_names(columns$employee_single_select) |> 
     map(\(x) {
-      employee_1 |> 
+      employee_2 |> 
         filter_section_complete(x) |>
         drop_na(all_of(x)) |> 
         select(record_id, all_of(x))
     }),
   set_names(columns$employee_multi_select) |> 
     map(\(x) {
-      employee_1 |> 
+      employee_2 |> 
         filter_section_complete(x) |> 
         pivot_longer_1(x)
     })
