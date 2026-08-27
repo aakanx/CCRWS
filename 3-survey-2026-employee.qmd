@@ -116,7 +116,7 @@ rm(employee_1, employee_2)
 #| label: demog-gen
 
 employee$demog_gen |> 
-  top_n(2, drop_other = FALSE) |>
+  top(2, drop_other = FALSE) |>
   ggplot_1() +
   scale_x_discrete(labels = choices$demog_gen) +
   labs(title = "Gender")
@@ -142,13 +142,7 @@ employee$demog_age |>
 #| label: demog-locat
 
 employee$demog_locat |>
-  mutate(
-    demog_locat = demog_locat |>
-      fct_reorder(-count) |> 
-      fct_lump_prop(0.01, count)
-  ) |>
-  count(demog_locat, wt = count, name = "count") |> 
-  mutate(pct = count / n_respondents$demog_locat) |> 
+  other_if(less_than_or_equal_to = 5) |>
   ggplot_1(geom_text_size = 3.4) +
   scale_x_discrete(
     labels = c(
@@ -256,7 +250,7 @@ employee$demog_disability |>
 # Branching Logic [demog_disability]='1'
 
 employee$demog_disability_typ |>
-  top_n(3) |>
+  top(3) |>
   ggplot_1() +
   scale_x_discrete(
     labels = choices$demog_disability_typ |> 
@@ -385,14 +379,7 @@ employee$demog_employ_typ |>
 # Branching Logic [demog_employ_typ]<>'6'
 
 employee$demog_sector |>
-  mutate(
-    demog_sector = demog_sector |>
-      fct_reorder(-count) |>
-      fct_lump_min(6, count) |> 
-      fct_other(drop = "77")
-  ) |>
-  count(demog_sector, wt = count, name = "count") |> 
-  mutate(pct = count / n_respondents$demog_sector) |> 
+  other_if(less_than_or_equal_to = 5, include = "77") |>
   ggplot_1() +
   scale_x_discrete(
     labels = choices$demog_sector |>
@@ -660,7 +647,7 @@ employee$career_leav |>
 # Branching Logic [career_leav]='1'
 
 employee$career_int |>
-  top_n(5) |> 
+  top(5) |> 
   ggplot_1() +
   scale_x_discrete(
     labels = choices$career_int |> 
@@ -686,7 +673,7 @@ employee$career_int |>
 # Branching Logic [demog_employ_typ]='6'
 
 employee$unemp_challeng |>
-  top_n(5) |> 
+  top(5) |> 
   ggplot_1() +
   scale_x_discrete(
     labels = choices$unemp_challeng |> c(
@@ -712,7 +699,7 @@ employee$unemp_challeng |>
 # Branching Logic [demog_employ_typ]='6'
 
 employee$unemp_miss |>
-  top_n(5) |> 
+  top(5) |> 
   ggplot_1() +
   scale_x_discrete(
     labels = c(

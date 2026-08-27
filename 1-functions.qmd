@@ -58,9 +58,9 @@ pivot_longer_1 <- function(data, column) {
 ```
 
 ```{r}
-#| label: top-n
+#| label: top
 
-top_n <- function(data, n, drop_other = TRUE) {
+top <- function(data, n, drop_other = TRUE) {
   column <- names(data)[1]
   data <- data |> mutate(across(all_of(column), \(x) {
     x |> 
@@ -76,14 +76,27 @@ top_n <- function(data, n, drop_other = TRUE) {
       filter_out(.data[[column]] == "Other")
   }
 }
+```
 
-top_n_simple <- function(data, n) {
+```{r}
+#| label: other-if
+
+other_if <- function(data, less_than_or_equal_to, include = NULL) {
   column <- names(data)[1]
+  data <- data |> mutate(across(all_of(column), \(x) {
+    x |> 
+      fct_reorder(-count) |> 
+      fct_lump_min(less_than_or_equal_to + 1, count)
+  }))
+  if (!is.null(include)) {
+    data <- data |> mutate(across(all_of(column), \(x) {
+      x |> 
+        fct_other(drop = include)
+    }))
+  }
   data |> 
-    mutate(across(all_of(column), \(x) {
-      x |> fct_lump_n(n, count) |> fct_reorder(-count)
-    })) |>
-    filter_out(.data[[column]] == "Other")
+    count(.data[[column]], wt = count, name = "count") |> 
+    mutate(pct = count / n_respondents[[column]])
 }
 ```
 
@@ -103,32 +116,6 @@ theme_1 <- function(...) {
       plot.caption = element_text(colour = scales::alpha("black", alpha = 0.65)),
       ...
     )
-}
-```
-
-```{r}
-#| label: theme-2
-
-# for Likert plots
-
-theme_2 <- function(...) {
-  theme(
-    axis.text = element_blank(),
-    axis.ticks = element_blank(),
-    panel.grid = element_blank(),
-    panel.border = element_blank(),
-    legend.key.size = unit(1, "lines"),
-    plot.title = element_text(
-      # size = 10, 
-      # face = "bold", 
-      hjust = 0.5
-    ),
-    plot.subtitle = element_text(
-      # size = 10, 
-      hjust = 0.5
-    ),
-    ...
-  )
 }
 ```
 
