@@ -1,6 +1,7 @@
 .*
 !.gitignore
 !.gitattributes
+!.nojekyll
 *.Rproj
 /*_cache/
 /*_files/
