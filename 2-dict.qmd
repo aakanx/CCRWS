@@ -5,7 +5,6 @@
 
 dict <- read_csv(".data/dictionary-2026-04-18.csv") |>
   janitor::clean_names() |>
-  # select(-where(\(x) all(is.na(x)))) |>
   select(
     field_name = variable_field_name,
     form_name,

@@ -1,6 +1,6 @@
 ---
 fig-width: 8
-fig-height: 4.4
+fig-height: 4.5
 output-file: "Survey-2026-Employee"
 ---
 
@@ -23,8 +23,7 @@ employee_1 <- read_csv(".data/employee-2026-06-03-1132.csv") |>
     "employee_1_complete" = "form_1_complete",
     "employee_2_1_complete" = "section_a2_role_workforce_context_35009f_complete",
     "employee_2_2_complete" = "section_a2_role_workforce_context_complete",
-    "employee_2_3_complete" =
-      "section_c_retention_burnout_career_intentions_complete"
+    "employee_2_3_complete" = "section_c_retention_burnout_career_intentions_complete"
   ) |> 
   select(
     -landing_page_complete,
@@ -44,7 +43,8 @@ employee_2 <- employee_1 |>
     across(-record_id, \(x) {
       fct_recode(x, NULL = "999") # "PNTA"
     }),
-    across(c(career_ladder, career_support, career_workload, career_crdtl), \(x) {        fct_recode(x, NULL = "6") # "N/A"
+    across(c(career_ladder, career_support, career_workload, career_crdtl), \(x) {
+      fct_recode(x, NULL = "6") # "N/A"
     }),
     across(c(num_range("unemp_jobsearch___", 1:5)), \(x) {
       replace_when(x, unemp_jobsearch___6 == "1" ~ "0") # equivalent to "N/A"
