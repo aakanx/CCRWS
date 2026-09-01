@@ -1,0 +1,696 @@
+---
+include-in-header: header.html
+output-file: ".Survey-2026-Employee-Interactive"
+---
+
+```{r}
+#| include: false
+
+library(tidyverse)
+```
+
+```{r}
+#| label: employee
+#| include: false
+
+# import
+employee <- read_csv(".data/employee-2026-06-03-1132.csv") |>
+  filter(landing_page_complete == 2) |> 
+  rename(
+    "employee_1_complete" = "form_1_complete",
+    "employee_2_1_complete" = "section_a2_role_workforce_context_35009f_complete",
+    "employee_2_2_complete" = "section_a2_role_workforce_context_complete",
+    "employee_2_3_complete" = "section_c_retention_burnout_career_intentions_complete"
+  ) |> 
+  select(
+    -landing_page_complete,
+    -section_d_opentext_questions_complete,
+    -ends_with("timestamp")
+  )
+
+# clean
+employee <- employee |>
+  select(-ends_with("999")) |> # "PNTA"
+  mutate(
+    across(-record_id, \(x)
+      na_if(x, 999) # "PNTA"
+    ),
+    across(c(career_ladder, career_support, career_workload, career_crdtl), \(x)
+      na_if(x, 6) # "N/A"
+    ),
+    across(c(num_range("unemp_jobsearch___", 1:5)), \(x) 
+      replace_when(x, unemp_jobsearch___6 == 1 ~ 0) # equivalent to "N/A"
+    )
+  ) |>
+  select(-unemp_jobsearch___6) # equivalent to "N/A"
+```
+
+```{r}
+#| label: dict
+#| include: false
+
+dict <- read_csv(".data/dictionary-2026-04-18.csv") |>
+  janitor::clean_names() |> 
+  select(
+    field_name = variable_field_name,
+    form_name,
+    field_type,
+    field_label,
+    choices = choices_calculations_or_slider_labels
+  ) |>
+  filter_out(
+    form_name == "national_workforce_employer_survey" |
+    field_type %in% c("descriptive", "text", "notes")
+  ) |>
+  mutate(
+    form_name = form_name |> replace_values(
+      "form_1" ~ "employee_1",
+      "section_a2_role_workforce_context_35009f" ~ "employee_2_1",
+      "section_a2_role_workforce_context" ~ "employee_2_2",
+      "section_c_retention_burnout_career_intentions" ~ "employee_2_3"
+    ),
+    choices = choices |> replace_when(
+      field_type == "yesno" ~ "0, No | 1, Yes"
+    )
+  )
+
+columns_employee_single_select <- dict |>
+  filter_out(field_type == "checkbox") |> 
+  pull(field_name)
+
+columns_employee_multi_select <- dict |>
+  filter(field_type == "checkbox") |> 
+  pull(field_name)
+```
+
+```{r}
+#| label: choices
+#| include: false
+
+get_choices_as_tibble <- function(column) {
+  matrix <- dict |> 
+    filter(field_name == column) |>
+    pull(choices) |>
+    str_split_1(" \\| ") |>
+    str_split_fixed(", ", n = 2)
+  tibble(
+    !!column := matrix[ ,1] |> as.numeric(),
+    category = matrix[ ,2]
+  )
+}
+
+choices <- dict |>
+  pull(field_name) |>
+  set_names() |>
+  map(get_choices_as_tibble)
+```
+
+```{r}
+#| label: data-from-R
+#| include: false
+
+ojs_define(
+  employee_from_r = employee,
+  dict_from_r = dict,
+  columns_employee_single_select_from_r = columns_employee_single_select,
+  columns_employee_multi_select_from_r = columns_employee_multi_select,
+  choices_from_r = choices
+)
+```
+
+```{ojs data-to-OJS}
+
+employee = aq.table(employee_from_r)
+dict = aq.table(dict_from_r)
+columns_employee_single_select = columns_employee_single_select_from_r
+columns_employee_multi_select = columns_employee_multi_select_from_r
+choices = Object.fromEntries(
+  Object.entries(choices_from_r).map(([k, v]) => [k, aq.table(v)])
+)
+```
+
+```{ojs get-question}
+
+function get_question(column) {
+  return dict
+    .filter(aq.escape(d => d.field_name === column))
+    .array("field_label")[0]
+}
+```
+
+```{ojs pivot-longer}
+
+function pivot_longer_1(data, column) {
+  return data
+    .select("record_id", aq.startswith(column))
+    .fold(aq.not("record_id"))
+    // .select(aq.startswith(column))
+    // .fold(aq.all())
+    .derive({ key: aq.escape(d => aq.op.replace(d.key, column + "___", "")) })
+    .filter(d => d.value === 1)
+    .rename({ key: column })
+    .derive({ [column]: aq.escape(d => aq.op.parse_int(d[column], 10)) })
+}
+```
+
+```{ojs make-objects}
+
+function make_objects_1(data, column) {
+  const section_complete = dict
+    .filter(aq.escape(d => d.field_name === column))
+    .array("form_name")[0] + "_complete"
+  return data
+    .filter(aq.escape(d => d[section_complete] === 2))
+    .select(column)
+    .filter(aq.escape(d => d[column] !== null))
+    .groupby(column)
+    .count()
+    .derive({ "pct": d => aq.op.round(d.count / aq.op.sum(d.count) * 100) })
+    .join_left(choices[column], column)
+    .relocate("category", { before: "count" })
+    .orderby(column)
+    .objects()
+}
+
+function make_objects_2(data, column) {
+  const section_complete = dict
+    .filter(aq.escape(d => d.field_name === column))
+    .array("form_name")[0] + "_complete"
+  const data_section_complete = data
+    .filter(aq.escape(d => d[section_complete] === 2))
+  const data_reshaped = pivot_longer_1(data_section_complete, column)
+  const n = data_reshaped
+    .dedupe("record_id")
+    .numRows()
+  return data_reshaped
+    .select(column)
+    .filter(aq.escape(d => d[column] !== null))
+    .groupby(column)
+    .count()
+    .derive({ "pct": aq.escape(d => aq.op.round(d.count / n * 100)) })
+    .join_left(choices[column], column)
+    .relocate("category", { before: "count" })
+    .orderby(column)
+    .objects()
+}
+```
+
+```{ojs make-table}
+
+function make_table(make_objects, data, column) {
+  const table = html`<table class="row-border order-column"></table>`
+  new DataTable(table, {
+    data: make_objects(data, column),
+    columns: [
+      { data: column, title: column, width: "27%" },
+      { data: "category", title: "category" },
+      { data: "count", title: "count", width: "11%" },
+      { data: "pct", title: "%", width: "6%", orderable: false }
+    ],
+    order: [[2, "desc"]],
+    paging: false,
+    searching: false,
+    lengthChange: false,
+    info: false,
+    autoWidth: false,
+    language: { emptyTable: "No matching records found" }
+  })
+  return html`<div>${table}</div>`
+}
+```
+
+```{ojs make-input}
+
+function make_input_1(data, column) {
+  return Inputs.checkbox(
+    data
+      .filter(aq.escape(d => d[column] !== null))
+      .dedupe(column)
+      .orderby(column)
+      .array(column)
+  )
+}
+
+function make_input_2(data, column) {
+  return Inputs.checkbox(
+    pivot_longer_1(data, column)
+      .dedupe(column)
+      .orderby(column)
+      .array(column)
+  )
+}
+```
+
+```{r}
+#| label: inputs
+#| results: asis
+
+cat("```{ojs inputs}\n")
+cat("inputs = ({\n")
+dict |> 
+  str_glue_data("  {field_name}: input_{field_name}") |> 
+  cat(sep = ",\n")
+cat("})\n")
+cat("```\n")
+```
+
+```{ojs filtered-employee}
+
+filtered_employee = employee.filter(aq.escape(d => 
+  columns_employee_single_select.every(column => 
+    inputs[column].length === 0 || 
+    inputs[column].includes(d[column])
+  ) &&
+  columns_employee_multi_select.every(column => 
+    inputs[column].length === 0 || 
+    inputs[column].some(n => d[column + "___" + n] === 1)
+  )
+))
+
+// .some() for OR, union
+// .every() for AND, intersection
+```
+
+## Employee
+
+### Demographics
+
+:::::::: panel-tabset
+#### Gender
+
+\${get_question("demog_gen")}
+
+```{ojs}
+
+viewof input_demog_gen = make_input_1(employee, "demog_gen")
+html`<br>`
+make_table(make_objects_1, filtered_employee, "demog_gen")
+```
+
+#### Age
+
+\${get_question("demog_age")}
+
+```{ojs}
+
+viewof input_demog_age = make_input_1(employee, "demog_age")
+html`<br>`
+make_table(make_objects_1, filtered_employee, "demog_age")
+```
+
+#### Location
+
+\${get_question("demog_locat")}
+
+```{ojs}
+
+viewof input_demog_locat = make_input_1(employee, "demog_locat")
+html`<br>`
+make_table(make_objects_1, filtered_employee, "demog_locat")
+```
+
+#### Indigenous
+
+\${get_question("demog_indig")}
+
+```{ojs}
+
+viewof input_demog_indig = make_input_1(employee, "demog_indig")
+html`<br>`
+make_table(make_objects_1, filtered_employee, "demog_indig")
+```
+
+#### Minority
+
+::: panel-tabset
+##### 1
+
+\${get_question("demog_minority")}
+
+```{ojs}
+
+viewof input_demog_minority = make_input_1(employee, "demog_minority")
+html`<br>`
+make_table(make_objects_1, filtered_employee, "demog_minority")
+```
+
+##### 2
+
+\${get_question("demog_popu")}
+
+```{ojs}
+
+viewof input_demog_popu = make_input_2(employee, "demog_popu")
+html`<br>`
+make_table(make_objects_2, filtered_employee, "demog_popu")
+```
+:::
+
+#### Disability
+
+::: panel-tabset
+##### 1
+
+\${get_question("demog_disability")}
+
+```{ojs}
+
+viewof input_demog_disability = make_input_1(employee, "demog_disability")
+html`<br>`
+make_table(make_objects_1, filtered_employee, "demog_disability")
+```
+
+##### 2
+
+\${get_question("demog_disability_typ")}
+
+```{ojs}
+
+viewof input_demog_disability_typ = make_input_2(employee, "demog_disability_typ")
+html`<br>`
+make_table(make_objects_2, filtered_employee, "demog_disability_typ")
+```
+:::
+
+#### Language
+
+\${get_question("demog_lang")}
+
+```{ojs}
+
+viewof input_demog_lang = make_input_2(employee, "demog_lang")
+html`<br>`
+make_table(make_objects_2, filtered_employee, "demog_lang")
+```
+
+#### Education
+
+::: panel-tabset
+##### 1
+
+\${get_question("demog_iehp")}
+
+```{ojs}
+
+viewof input_demog_iehp = make_input_1(employee, "demog_iehp")
+html`<br>`
+make_table(make_objects_1, filtered_employee, "demog_iehp")
+```
+
+##### 2
+
+\${get_question("demog_edu")}
+
+```{ojs}
+
+viewof input_demog_edu = make_input_1(employee, "demog_edu")
+html`<br>`
+make_table(make_objects_1, filtered_employee, "demog_edu")
+```
+
+##### 3
+
+\${get_question("demog_cr")}
+
+```{ojs}
+
+viewof input_demog_cr = make_input_1(employee, "demog_cr")
+html`<br>`
+make_table(make_objects_1, filtered_employee, "demog_cr")
+```
+
+##### 4
+
+\${get_question("demog_cr_cert")}
+
+```{ojs}
+
+viewof input_demog_cr_cert = make_input_1(employee, "demog_cr_cert")
+html`<br>`
+make_table(make_objects_1, filtered_employee, "demog_cr_cert")
+```
+:::
+
+#### Employment
+
+::: panel-tabset
+##### 1
+
+\${get_question("demog_employ_typ")}
+
+```{ojs}
+
+viewof input_demog_employ_typ = make_input_1(employee, "demog_employ_typ")
+html`<br>`
+make_table(make_objects_1, filtered_employee, "demog_employ_typ")
+```
+
+##### 2
+
+\${get_question("demog_sector")}
+
+```{ojs}
+
+viewof input_demog_sector = make_input_1(employee, "demog_sector")
+html`<br>`
+make_table(make_objects_1, filtered_employee, "demog_sector")
+```
+
+##### 3
+
+\${get_question("demog_commun")}
+
+```{ojs}
+
+viewof input_demog_commun = make_input_1(employee, "demog_commun")
+html`<br>`
+make_table(make_objects_1, filtered_employee, "demog_commun")
+```
+
+##### 4
+
+\${get_question("demog_role")}
+
+```{ojs}
+
+viewof input_demog_role = make_input_2(employee, "demog_role")
+html`<br>`
+make_table(make_objects_2, filtered_employee, "demog_role")
+```
+:::
+
+#### Experience
+
+::: panel-tabset
+##### 1
+
+\${get_question("demog_wrk_yr")}
+
+```{ojs}
+
+viewof input_demog_wrk_yr = make_input_1(employee, "demog_wrk_yr")
+html`<br>`
+make_table(make_objects_1, filtered_employee, "demog_wrk_yr")
+```
+
+##### 2
+
+\${get_question("demog_current_wrk")}
+
+```{ojs}
+
+viewof input_demog_current_wrk = make_input_1(employee, "demog_current_wrk")
+html`<br>`
+make_table(make_objects_1, filtered_employee, "demog_current_wrk")
+```
+:::
+::::::::
+
+### Perspectives
+
+:::::::: panel-tabset
+#### Role context
+
+::: panel-tabset
+##### 1
+
+\${get_question("role_jobmatch")}
+
+```{ojs}
+
+viewof input_role_jobmatch = make_input_1(employee, "role_jobmatch")
+html`<br>`
+make_table(make_objects_1, filtered_employee, "role_jobmatch")
+```
+
+##### 2
+
+\${get_question("role_compensation")}
+
+```{ojs}
+
+viewof input_role_compensation = make_input_1(employee, "role_compensation")
+html`<br>`
+make_table(make_objects_1, filtered_employee, "role_compensation")
+```
+
+##### 3
+
+\${get_question("role_overtime")}
+
+```{ojs}
+
+viewof input_role_overtime = make_input_1(employee, "role_overtime")
+html`<br>`
+make_table(make_objects_1, filtered_employee, "role_overtime")
+```
+
+##### 4
+
+\${get_question("role_complex")}
+
+```{ojs}
+
+viewof input_role_complex = make_input_1(employee, "role_complex")
+html`<br>`
+make_table(make_objects_1, filtered_employee, "role_complex")
+```
+:::
+
+#### Career advancement
+
+::: panel-tabset
+##### 1
+
+\${get_question("career_ladder")}
+
+```{ojs}
+
+viewof input_career_ladder = make_input_1(employee, "career_ladder")
+html`<br>`
+make_table(make_objects_1, filtered_employee, "career_ladder")
+```
+
+##### 2
+
+\${get_question("career_support")}
+
+```{ojs}
+
+viewof input_career_support = make_input_1(employee, "career_support")
+html`<br>`
+make_table(make_objects_1, filtered_employee, "career_support")
+```
+
+##### 3
+
+\${get_question("career_workload")}
+
+```{ojs}
+
+viewof input_career_workload = make_input_1(employee, "career_workload")
+html`<br>`
+make_table(make_objects_1, filtered_employee, "career_workload")
+```
+
+##### 4
+
+\${get_question("career_crdtl")}
+
+```{ojs}
+
+viewof input_career_crdtl = make_input_1(employee, "career_crdtl")
+html`<br>`
+make_table(make_objects_1, filtered_employee, "career_crdtl")
+```
+:::
+
+#### Team capacity
+
+::: panel-tabset
+##### 1
+
+\${get_question("ret_max")}
+
+```{ojs}
+
+viewof input_ret_max = make_input_1(employee, "ret_max")
+html`<br>`
+make_table(make_objects_1, filtered_employee, "ret_max")
+```
+
+##### 2
+
+\${get_question("ret_struggle")}
+
+```{ojs}
+
+viewof input_ret_struggle = make_input_1(employee, "ret_struggle")
+html`<br>`
+make_table(make_objects_1, filtered_employee, "ret_struggle")
+```
+:::
+
+#### Job change
+
+::: panel-tabset
+##### 1
+
+\${get_question("career_leav")}
+
+```{ojs}
+
+viewof input_career_leav = make_input_1(employee, "career_leav")
+html`<br>`
+make_table(make_objects_1, filtered_employee, "career_leav")
+```
+
+##### 2
+
+\${get_question("career_int")}
+
+```{ojs}
+
+viewof input_career_int = make_input_2(employee, "career_int")
+html`<br>`
+make_table(make_objects_2, filtered_employee, "career_int")
+```
+:::
+
+#### Unemployed
+
+::: panel-tabset
+##### 1
+
+\${get_question("unemp_challeng")}
+
+```{ojs}
+
+viewof input_unemp_challeng = make_input_2(employee, "unemp_challeng")
+html`<br>`
+make_table(make_objects_2, filtered_employee, "unemp_challeng")
+```
+
+##### 2
+
+\${get_question("unemp_miss")}
+
+```{ojs}
+
+viewof input_unemp_miss = make_input_2(employee, "unemp_miss")
+html`<br>`
+make_table(make_objects_2, filtered_employee, "unemp_miss")
+```
+
+##### 3
+
+\${get_question("unemp_jobsearch")}
+
+```{ojs}
+
+viewof input_unemp_jobsearch = make_input_2(employee, "unemp_jobsearch")
+html`<br>`
+make_table(make_objects_2, filtered_employee, "unemp_jobsearch")
+```
+:::
+::::::::
