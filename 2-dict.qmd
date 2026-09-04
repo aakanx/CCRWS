@@ -3,7 +3,7 @@
 ```{r}
 #| label: dict
 
-dict <- read_csv(".data/dictionary-2026-04-18.csv") |>
+dict <- read_csv(".data/dictionary-2026-09-04.csv") |>
   janitor::clean_names() |>
   select(
     field_name = variable_field_name,
@@ -15,7 +15,8 @@ dict <- read_csv(".data/dictionary-2026-04-18.csv") |>
     # section_header, field_note, branching_logic, 
     # required_field, matrix_group_name, field_annotation
   ) |>
-  filter_out(field_type %in% c("descriptive", "text", "notes")) |>
+  filter_out(field_type %in% c("descriptive")) |>
+  filter_out(field_name |> str_starts("language")) |> 
   mutate(
     form_name = form_name |> replace_values(
       "form_1" ~ "employee_1",
@@ -39,26 +40,42 @@ dict <- read_csv(".data/dictionary-2026-04-18.csv") |>
 
 columns <- list(
   employee = dict |> 
-    filter_out(form_name == "employer") |>
+    filter(form_name |> str_starts("employee")) |>
     pull(field_name),
   employee_single_select = dict |>
-    filter_out(form_name == "employer") |> 
-    filter_out(field_type == "checkbox") |> 
+    filter(form_name |> str_starts("employee")) |>
+    filter(field_type %in% c("radio", "yesno", "dropdown")) |> 
     pull(field_name),
   employee_multi_select = dict |>
-    filter_out(form_name == "employer") |> 
+    filter(form_name |> str_starts("employee")) |>
     filter(field_type == "checkbox") |> 
+    pull(field_name),
+  employee_text = dict |> 
+    filter(form_name |> str_starts("employee")) |>
+    filter(field_type == "text") |> 
+    pull(field_name),
+  employee_notes = dict |> 
+    filter(form_name |> str_starts("employee")) |>
+    filter(field_type == "notes") |> 
     pull(field_name),
   employer = dict |> 
     filter(form_name == "employer") |>
     pull(field_name),
   employer_single_select = dict |>
     filter(form_name == "employer") |> 
-    filter_out(field_type == "checkbox") |> 
+    filter(field_type %in% c("radio", "yesno", "dropdown")) |> 
     pull(field_name),
   employer_multi_select = dict |>
     filter(form_name == "employer") |> 
     filter(field_type == "checkbox") |> 
+    pull(field_name),
+  employer_text = dict |> 
+    filter(form_name == "employer") |> 
+    filter(field_type == "text") |> 
+    pull(field_name),
+  employer_notes = dict |> 
+    filter(form_name == "employer") |> 
+    filter(field_type == "notes") |> 
     pull(field_name)
 )
 ```
@@ -66,9 +83,13 @@ columns <- list(
 ```{r}
 #| label: choices
 
-choices <- dict |>
-  pull(field_name) |>
-  set_names() |>
+choices <- c(
+  columns$employee_single_select,
+  columns$employee_multi_select,
+  columns$employer_single_select,
+  columns$employer_multi_select
+) |> 
+  set_names() |> 
   map(get_choices)
 
 choices <- choices |>

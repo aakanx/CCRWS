@@ -11,103 +11,14 @@ library(tidyverse)
 source("source_qmd.R")
 source_qmd("1-functions.qmd")
 source_qmd("2-dict.qmd")
-```
-
-```{r}
-#| label: employee-import
-#| include: false
-
-employee_1 <- read_csv(".data/employee-2026-06-03-1132.csv") |>
-  filter(landing_page_complete == 2) |> 
-  rename(
-    "employee_1_complete" = "form_1_complete",
-    "employee_2_1_complete" = "section_a2_role_workforce_context_35009f_complete",
-    "employee_2_2_complete" = "section_a2_role_workforce_context_complete",
-    "employee_2_3_complete" = "section_c_retention_burnout_career_intentions_complete"
-  ) |> 
-  select(
-    -landing_page_complete,
-    -section_d_opentext_questions_complete,
-    -ends_with("timestamp")
-  ) |>
-  mutate(across(-record_id, \(x) fct_inseq(as.character(x))))
-```
-
-```{r}
-#| label: employee-clean-filter-reshape
-#| include: false
-
-employee_2 <- employee_1 |>
-  select(-ends_with("999")) |> # "PNTA"
-  mutate(
-    across(-record_id, \(x) {
-      fct_recode(x, NULL = "999") # "PNTA"
-    }),
-    across(c(career_ladder, career_support, career_workload, career_crdtl), \(x) {
-      fct_recode(x, NULL = "6") # "N/A"
-    }),
-    across(c(num_range("unemp_jobsearch___", 1:5)), \(x) {
-      replace_when(x, unemp_jobsearch___6 == "1" ~ "0") # equivalent to "N/A"
-    })
-  ) |>
-  select(-unemp_jobsearch___6) # equivalent to "N/A"
-
-employee_2 <- c(
-  set_names(columns$employee_single_select) |> 
-    map(\(x) {
-      employee_2 |> 
-        filter_section_complete(x) |>
-        drop_na(all_of(x)) |> 
-        select(record_id, all_of(x))
-    }),
-  set_names(columns$employee_multi_select) |> 
-    map(\(x) {
-      employee_2 |> 
-        filter_section_complete(x) |> 
-        pivot_longer_1(x)
-    })
-)
-```
-
-```{r}
-#| label: n-respondents
-#| include: false
-
-n_respondents <- c(
-  set_names(columns$employee_single_select) |>
-    map(\(x) {
-      employee_2[[x]] |>
-        nrow()
-    }),
-  set_names(columns$employee_multi_select) |>
-    map(\(x) {
-      employee_2[[x]] |>
-        pull(record_id) |>
-        n_distinct()
-    })
-)
-```
-
-```{r}
-#| label: employee-count-pct
-#| include: false
-
-employee <- set_names(columns$employee) |> 
-  map(\(x) {
-    column <- names(employee_2[[x]])[2]
-    employee_2[[x]] |> 
-      count(.data[[column]], name = "count") |> 
-      mutate(pct = count / n_respondents[[x]])
-  })
-
-rm(employee_1, employee_2)
+source_qmd("3-data.qmd")
 ```
 
 ## Employee
 
 ### Demographics
 
-:::::::: panel-tabset
+:::::::::: panel-tabset
 #### Gender
 
 ```{r}
@@ -136,11 +47,14 @@ employee$demog_age |>
 
 #### Location
 
+::: panel-tabset
+##### 1
+
 ```{r}
 #| label: demog-locat
 
 employee$demog_locat |>
-  other_if(less_than_or_equal_to = 5) |>
+  other_if(less_than_or_equal_to = 10) |>
   ggplot_1(geom_text_size = 3.4) +
   scale_x_discrete(
     labels = c(
@@ -160,8 +74,25 @@ employee$demog_locat |>
       "14" = "YT"
     )
   ) +
-  labs(title = "Location")
+  labs(title = "In what province or territory is your work primarily based?")
 ```
+
+##### 2
+
+```{r}
+#| label: demog-locat-live
+
+employee$demog_locat_live |>
+  other_if(less_than_or_equal_to = 5) |>
+  ggplot_1() +
+  scale_x_discrete(labels = c("7" = "Québec")) +
+  labs(
+    title = get_question("demog_locat_live"),
+    caption = "Note: This question was introduced in the French translation of the survey."
+  ) +
+  theme(plot.caption = element_text(hjust = 0.5))
+```
+:::
 
 #### Indigenous
 
@@ -217,9 +148,7 @@ employee$demog_popu |>
     labels = choices$demog_popu |> 
       c("12" = "Other") |> 
       str_split_i("\\.| \\(", 1) |> 
-      str_wrap(5),
-    # guide = guide_axis(angle = 45),
-    # expand = expansion(mult = c(0.1, 0.1))
+      str_wrap(5)
   ) +
   labs(title = "Which population group(s) do you identify with?")
 ```
@@ -254,9 +183,7 @@ employee$demog_disability_typ |>
     labels = choices$demog_disability_typ |> 
       c("8" = "Mental health", 
         "10" = "Pain", 
-        "12" = "Other"),
-    # guide = guide_axis(angle = 45),
-    # expand = expansion(mult = c(0.11, 0.11))
+        "12" = "Other")
   ) +
   labs(
     title = "Which disability types apply to you?",
@@ -266,6 +193,9 @@ employee$demog_disability_typ |>
 :::
 
 #### Language
+
+::: panel-tabset
+##### 1
 
 ```{r}
 #| label: demog-lang
@@ -278,6 +208,30 @@ employee$demog_lang |>
       str_split_i(" \\(", 1)
   )
 ```
+
+##### 2
+
+```{r}
+#| label: demog-language-work
+
+employee$demog_language_work |> 
+  mutate(
+    demog_language_work = demog_language_work |> 
+      fct_expand("3", after = 2)
+  ) |>
+  ggplot_1(drop_empty = FALSE) +
+  scale_x_discrete(
+    drop = FALSE,
+    labels = choices$demog_language_work
+  ) +
+  labs(
+    title = get_question("demog_language_work") |> 
+      str_replace("language", "language(s)"),
+    caption = "Note: This question was introduced in the French translation of the survey."
+  ) +
+  theme(plot.caption = element_text(hjust = 0.5))
+```
+:::
 
 #### Education
 
@@ -313,8 +267,7 @@ employee$demog_edu |>
   scale_x_discrete(
     labels = choices$demog_edu |> 
       str_split_i(" \\(.*\\)", 1) |> 
-      str_wrap(17),
-    # guide = guide_axis(angle = 45)
+      str_wrap(18)
   ) +
   labs(
     title = get_question("demog_edu") |>
@@ -383,9 +336,7 @@ employee$demog_sector |>
     labels = choices$demog_sector |>
       str_split_i("\\.|: | \\[| \\(", 1) |>
       str_replace("/", " / ") |>
-      str_wrap(15),
-    # guide = guide_axis(angle = 45),
-    # expand = expansion(mult = c(0.1, 0.1))
+      str_wrap(15)
   ) +
   labs(
     title = get_question("demog_sector"),
@@ -461,7 +412,7 @@ employee$demog_current_wrk |>
   labs(title = get_question("demog_current_wrk"))
 ```
 :::
-::::::::
+::::::::::
 
 ### Perspectives
 

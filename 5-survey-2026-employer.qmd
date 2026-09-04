@@ -11,76 +11,7 @@ library(tidyverse)
 source("source_qmd.R")
 source_qmd("1-functions.qmd")
 source_qmd("2-dict.qmd")
-```
-
-```{r}
-#| label: employer-import
-#| include: false
-
-employer_1 <- read_csv(".data/employer-2026-06-03-1645.csv") |>
-  filter(national_workforce_employer_survey_complete == 2) |>
-  select(
-    -redcap_event_name,
-    -redcap_survey_identifier,
-    -landing_page_timestamp,
-    -landing_page_complete,
-    -national_workforce_employer_survey_timestamp,
-    -national_workforce_employer_survey_complete
-  ) |>
-  mutate(across(-record_id, \(x) fct_inseq(as.character(x))))
-```
-
-```{r}
-#| label: employer-filter-reshape
-#| include: false
-
-employer_2 <- c(
-  set_names(columns$employer_single_select) |> 
-    map(\(x) {
-      employer_1 |>
-        drop_na(all_of(x)) |> 
-        select(record_id, all_of(x))
-    }),
-  set_names(columns$employer_multi_select) |> 
-    map(\(x) {
-      employer_1 |> 
-        pivot_longer_1(x)
-    })
-)
-```
-
-```{r}
-#| label: n-respondents
-#| include: false
-
-n_respondents <- c(
-  set_names(columns$employer_single_select) |> 
-    map(\(x) {
-      employer_2[[x]] |> 
-        nrow()
-    }),
-  set_names(columns$employer_multi_select) |> 
-    map(\(x) {
-      employer_2[[x]] |>
-        pull(record_id) |> 
-        n_distinct()
-    })
-)
-```
-
-```{r}
-#| label: employer-count-pct
-#| include: false
-
-employer <- set_names(columns$employer) |> 
-  map(\(x) {
-    column <- names(employer_2[[x]])[2]
-    employer_2[[x]] |> 
-      count(.data[[column]], name = "count") |> 
-      mutate(pct = count / n_respondents[[x]])
-  })
-
-rm(employer_1, employer_2)
+source_qmd("3-data.qmd")
 ```
 
 ## Employer
@@ -111,6 +42,7 @@ employer$emp_org_scale |>
 #| label: emp-org-typ
 
 employer$emp_org_typ |>
+  mutate(emp_org_typ = emp_org_typ |> fct_reorder(-count)) |> 
   ggplot_1() +
   scale_x_discrete(
     labels = choices$emp_org_typ |>
@@ -127,11 +59,29 @@ employer$emp_org_typ |>
 #| label: emp-org-prov
 
 employer$emp_org_prov |>
-  mutate(emp_org_prov = emp_org_prov |> fct_reorder(-count)) |>
+  mutate(
+    emp_org_prov = emp_org_prov |> 
+      fct_reorder(-count) |> 
+      fct_relevel("1", after = Inf)
+  ) |>
   ggplot_1() +
   scale_x_discrete(
-    labels = choices$emp_org_prov |>
-      str_replace("/ ", " /\n")
+    labels = c(
+      "1" = "National /\nPan-Canadian",
+      "2" = "AB",
+      "3" = "BC",
+      "4" = "MB",
+      "5" = "NB",
+      "6" = "NL",
+      "7" = "QC",
+      "8" = "NS",
+      "9" = "ON",
+      "10" = "PE",
+      "11" = "SK",
+      "12" = "NT",
+      "13" = "NU",
+      "14" = "YT"
+    )
   ) +
   labs(title = "Where in Canada does your organization conduct Clinical Research operations?")
 ```
@@ -282,7 +232,7 @@ employer$emp_demand |>
     emp_demand = emp_demand |> 
       fct_expand("1", after = 0)
   ) |>
-  ggplot_1() +
+  ggplot_1(drop_empty = FALSE) +
   scale_x_discrete(
     drop = FALSE,
     labels = choices$emp_demand
@@ -416,7 +366,7 @@ employer$emp_reput |>
     emp_reput = emp_reput |>
       fct_expand("4", after = 3)
   ) |>
-  ggplot_1() +
+  ggplot_1(drop_empty = FALSE) +
   scale_x_discrete(
     drop = FALSE,
     labels = choices$emp_reput
@@ -424,6 +374,48 @@ employer$emp_reput |>
   labs(
     title = get_question("emp_reput") |>
       str_replace(": ", ":\n")
+  )
+```
+
+#### 7
+
+```{r}
+#| label: barriers
+
+employer_1 |>
+  select(emp_sal:emp_reput) |>
+  drop_na() |> 
+  ggstats::gglikert(
+    variable_labels = c(
+      emp_sal = "Salary / Benefits",
+      emp_qual = "Candidate Quality",
+      emp_contr = "Contract Instability",
+      emp_geo = "Geography",
+      emp_pipe = "Internal Pipeline",
+      emp_reput = "Workload Reputation"
+    ),
+    y_label_wrap = 15,
+    sort = "ascending",
+    cutoff = 1
+  ) +
+  scale_x_continuous(
+    breaks = seq(-0.25, 0.75, 0.25),
+    labels = \(x) scales::label_percent()(abs(x))
+  ) +
+  scale_fill_viridis_d(
+    option = "viridis", 
+    labels = choices$emp_sal
+  ) +
+  labs(
+    title = "Barriers to recruiting qualified staff",
+    subtitle = paste0("n = ", n_respondents$emp_sal)
+  ) +
+  theme(
+    panel.grid = element_blank(),
+    axis.text.y = element_text(hjust = 0.5),
+    legend.key.size = unit(1, "lines"),
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5)
   )
 ```
 :::

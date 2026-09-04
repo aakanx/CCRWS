@@ -1,0 +1,217 @@
+## data
+
+```{r}
+#| label: import
+
+survey <- read_csv(".data/data-2026-09-02-1114.csv")
+```
+
+### employee
+
+```{r}
+#| label: employee
+
+employee_1 <- survey |>
+  filter(
+    redcap_event_name == "event_1_arm_1",
+    landing_page_complete == 2
+  ) |> 
+  select(
+    where(\(x) any(!is.na(x))),
+    -c(
+      redcap_event_name,
+      landing_page_complete,
+      section_d_opentext_questions_complete,
+      ends_with("timestamp"),
+      starts_with("language"),
+      columns$employee_text,
+      columns$employee_notes,
+      opn_cr,
+      opn_change
+    )
+  ) |>
+  rename(
+    "employee_1_complete" = "form_1_complete",
+    "employee_2_1_complete" = "section_a2_role_workforce_context_35009f_complete",
+    "employee_2_2_complete" = "section_a2_role_workforce_context_complete",
+    "employee_2_3_complete" = "section_c_retention_burnout_career_intentions_complete"
+  ) |> 
+  mutate(
+    record_id = as.character(record_id),
+    across(-record_id, \(x) fct_inseq(as.character(x)))
+  )
+```
+
+```{r}
+#| label: employee-clean-filter-reshape
+
+employee_2 <- employee_1 |>
+  select(-ends_with("999")) |> # "PNTA"
+  mutate(
+    across(-record_id, \(x) {
+      fct_recode(x, NULL = "999") # "PNTA"
+    }),
+    across(c(career_ladder, career_support, career_workload, career_crdtl), \(x) {
+      fct_recode(x, NULL = "6") # "N/A"
+    }),
+    across(c(num_range("unemp_jobsearch___", 1:5)), \(x) {
+      replace_when(x, unemp_jobsearch___6 == "1" ~ "0") # equivalent to "N/A"
+    })
+  ) |>
+  select(-unemp_jobsearch___6) # equivalent to "N/A"
+
+employee_2 <- c(
+  set_names(columns$employee_single_select) |> 
+    map(\(x) {
+      employee_2 |> 
+        filter_section_complete(x) |>
+        drop_na(all_of(x)) |> 
+        select(record_id, all_of(x))
+    }),
+  set_names(columns$employee_multi_select) |> 
+    map(\(x) {
+      employee_2 |> 
+        filter_section_complete(x) |> 
+        pivot_longer_1(x)
+    })
+)
+```
+
+```{r}
+#| label: employee-n-respondents
+
+temp <- c(
+  set_names(columns$employee_single_select) |>
+    map(\(x) {
+      employee_2[[x]] |>
+        nrow()
+    }),
+  set_names(columns$employee_multi_select) |>
+    map(\(x) {
+      employee_2[[x]] |>
+        pull(record_id) |>
+        n_distinct()
+    })
+)
+
+if (exists("n_respondents")) {
+  if (any(names(temp) %notin% names(n_respondents))) {
+    n_respondents <- c(
+      n_respondents,
+      temp[names(temp) %notin% names(n_respondents)]
+    )
+  }
+} else {
+  n_respondents <- temp
+}
+
+rm(temp)
+```
+
+```{r}
+#| label: employee-count-pct
+
+employee <- set_names(c(
+  columns$employee_single_select,
+  columns$employee_multi_select
+)) |> 
+  map(\(x) {
+    column <- names(employee_2[[x]])[2]
+    employee_2[[x]] |> 
+      count(.data[[column]], name = "count") |> 
+      mutate(pct = count / n_respondents[[x]])
+  })
+```
+
+### employer
+
+```{r}
+#| label: employer
+
+employer_1 <- survey |>
+  filter(
+    redcap_event_name == "event_2_arm_2",
+    national_workforce_employer_survey_complete == 2
+  ) |>
+  select(
+    where(\(x) any(!is.na(x))),
+    -c(
+      redcap_event_name,
+      landing_page_timestamp,
+      landing_page_complete,
+      national_workforce_employer_survey_timestamp,
+      national_workforce_employer_survey_complete,
+      starts_with("language"),
+      emp_org_typ_otr,
+      emp_org_strategy
+    )
+  ) |>
+  mutate(
+    record_id = as.character(record_id),
+    across(-record_id, \(x) fct_inseq(as.character(x)))
+  )
+```
+
+```{r}
+#| label: employer-clean-filter-reshape
+
+employer_2 <- c(
+  set_names(columns$employer_single_select) |> 
+    map(\(x) {
+      employer_1 |>
+        drop_na(all_of(x)) |> 
+        select(record_id, all_of(x))
+    }),
+  set_names(columns$employer_multi_select) |> 
+    map(\(x) {
+      employer_1 |> 
+        pivot_longer_1(x)
+    })
+)
+```
+
+```{r}
+#| label: employer-n-respondents
+
+temp <- c(
+  set_names(columns$employer_single_select) |> 
+    map(\(x) {
+      employer_2[[x]] |> 
+        nrow()
+    }),
+  set_names(columns$employer_multi_select) |> 
+    map(\(x) {
+      employer_2[[x]] |>
+        pull(record_id) |> 
+        n_distinct()
+    }) 
+)
+
+if (exists("n_respondents")) {
+  if (any(names(temp) %notin% names(n_respondents))) {
+    n_respondents <- c(
+      n_respondents,
+      temp[names(temp) %notin% names(n_respondents)]
+    )
+  }
+} else {
+  n_respondents <- temp
+}
+
+rm(temp)
+```
+
+```{r}
+#| label: employer-count-pct
+
+employer <- set_names(c(
+  columns$employer_single_select,
+  columns$employer_multi_select
+)) |> 
+  map(\(x) {
+    column <- names(employer_2[[x]])[2]
+    employer_2[[x]] |> 
+      count(.data[[column]], name = "count") |> 
+      mutate(pct = count / n_respondents[[x]])
+  })
+```

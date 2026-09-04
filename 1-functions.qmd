@@ -9,7 +9,7 @@ filter_section_complete <- function(data, column) {
     pull(form_name) |> 
     paste0("_complete")
   data |> 
-    filter(.data[[section_complete]] == 2)
+    filter(.data[[section_complete]] == "2")
 }
 ```
 
@@ -43,11 +43,12 @@ get_choices <- function(column) {
 #| label: pivot-longer-1
 
 pivot_longer_1 <- function(data, column) {
+  prefix <- paste0(column, "___")
   data |>
-    select(record_id, starts_with(column)) |>
+    select(record_id, starts_with(prefix)) |>
     pivot_longer(
       cols = -record_id,
-      names_prefix = paste0(column, "___"),
+      names_prefix = prefix,
       names_to = column,
       values_to = "is_selected",
     ) |>
@@ -122,7 +123,11 @@ theme_1 <- function(...) {
 ```{r}
 #| label: ggplot-1
 
-ggplot_1 <- function(data, geom_text_size = get_geom_defaults(geom_text)$size) {
+ggplot_1 <- function(
+  data,
+  geom_text_size = get_geom_defaults(geom_text)$size,
+  drop_empty = TRUE
+) {
   column <- names(data)[1]
   n <- n_respondents[[column]]
   data |>
@@ -135,7 +140,11 @@ ggplot_1 <- function(data, geom_text_size = get_geom_defaults(geom_text)$size) {
       size = geom_text_size
     ) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
-    scale_fill_viridis_d(option = "viridis", guide = "none") +
+    scale_fill_viridis_d(
+      option = "viridis",
+      guide = "none",
+      drop = drop_empty
+    ) +
     labs(subtitle = paste0("n = ", n)) +
     theme_1()
 }
