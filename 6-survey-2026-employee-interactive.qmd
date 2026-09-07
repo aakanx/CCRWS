@@ -10,46 +10,10 @@ library(tidyverse)
 ```
 
 ```{r}
-#| label: employee
-#| include: false
-
-# import
-employee <- read_csv(".data/employee-2026-06-03-1132.csv") |>
-  filter(landing_page_complete == 2) |> 
-  rename(
-    "employee_1_complete" = "form_1_complete",
-    "employee_2_1_complete" = "section_a2_role_workforce_context_35009f_complete",
-    "employee_2_2_complete" = "section_a2_role_workforce_context_complete",
-    "employee_2_3_complete" = "section_c_retention_burnout_career_intentions_complete"
-  ) |> 
-  select(
-    -landing_page_complete,
-    -section_d_opentext_questions_complete,
-    -ends_with("timestamp")
-  )
-
-# clean
-employee <- employee |>
-  select(-ends_with("999")) |> # "PNTA"
-  mutate(
-    across(-record_id, \(x)
-      na_if(x, 999) # "PNTA"
-    ),
-    across(c(career_ladder, career_support, career_workload, career_crdtl), \(x)
-      na_if(x, 6) # "N/A"
-    ),
-    across(c(num_range("unemp_jobsearch___", 1:5)), \(x) 
-      replace_when(x, unemp_jobsearch___6 == 1 ~ 0) # equivalent to "N/A"
-    )
-  ) |>
-  select(-unemp_jobsearch___6) # equivalent to "N/A"
-```
-
-```{r}
 #| label: dict
 #| include: false
 
-dict <- read_csv(".data/dictionary-2026-04-18.csv") |>
+dict <- read_csv(".data/dictionary-2026-09-04.csv") |>
   janitor::clean_names() |> 
   select(
     field_name = variable_field_name,
@@ -106,6 +70,46 @@ choices <- dict |>
 ```
 
 ```{r}
+#| label: employee
+#| include: false
+
+# import
+employee <- read_csv(".data/data-2026-09-02-1114.csv") |>
+  filter(
+    redcap_event_name == "event_1_arm_1",
+    landing_page_complete == 2
+  ) |>
+  rename(
+    "employee_1_complete" = "form_1_complete",
+    "employee_2_1_complete" = "section_a2_role_workforce_context_35009f_complete",
+    "employee_2_2_complete" = "section_a2_role_workforce_context_complete",
+    "employee_2_3_complete" = "section_c_retention_burnout_career_intentions_complete"
+  ) |> 
+  select(
+    record_id,
+    all_of(columns_employee_single_select),
+    contains(columns_employee_multi_select |> paste0("___")),
+    starts_with("employee_")
+  )
+
+# clean
+employee <- employee |>
+  select(-ends_with("999")) |> # "PNTA"
+  mutate(
+    across(-record_id, \(x)
+      na_if(x, 999) # "PNTA"
+    ),
+    across(c(career_ladder, career_support, career_workload, career_crdtl), \(x)
+      na_if(x, 6) # "N/A"
+    ),
+    across(c(num_range("unemp_jobsearch___", 1:5)), \(x) 
+      replace_when(x, unemp_jobsearch___6 == 1 ~ 0) # equivalent to "N/A"
+    )
+  ) |>
+  select(-unemp_jobsearch___6) # equivalent to "N/A"
+```
+
+```{r}
 #| label: data-from-R
 #| include: false
 
@@ -142,7 +146,7 @@ function get_question(column) {
 
 function pivot_longer_1(data, column) {
   return data
-    .select("record_id", aq.startswith(column))
+    .select("record_id", aq.startswith(column + "___"))
     .fold(aq.not("record_id"))
     // .select(aq.startswith(column))
     // .fold(aq.all())
@@ -202,7 +206,7 @@ function make_table(make_objects, data, column) {
   new DataTable(table, {
     data: make_objects(data, column),
     columns: [
-      { data: column, title: column, width: "27%" },
+      { data: column, title: column, width: "28%" },
       { data: "category", title: "category" },
       { data: "count", title: "count", width: "11%" },
       { data: "pct", title: "%", width: "6%", orderable: false }
@@ -243,7 +247,7 @@ function make_input_2(data, column) {
 
 ```{r}
 #| label: inputs
-#| results: asis
+#| output: asis
 
 cat("```{ojs inputs}\n")
 cat("inputs = ({\n")
@@ -275,7 +279,7 @@ filtered_employee = employee.filter(aq.escape(d =>
 
 ### Demographics
 
-:::::::: panel-tabset
+:::::::::: panel-tabset
 #### Gender
 
 \${get_question("demog_gen")}
@@ -300,6 +304,9 @@ make_table(make_objects_1, filtered_employee, "demog_age")
 
 #### Location
 
+::: panel-tabset
+##### 1
+
 \${get_question("demog_locat")}
 
 ```{ojs}
@@ -308,6 +315,18 @@ viewof input_demog_locat = make_input_1(employee, "demog_locat")
 html`<br>`
 make_table(make_objects_1, filtered_employee, "demog_locat")
 ```
+
+##### 2
+
+\${get_question("demog_locat_live")}
+
+```{ojs}
+
+viewof input_demog_locat_live = make_input_1(employee, "demog_locat_live")
+html`<br>`
+make_table(make_objects_1, filtered_employee, "demog_locat_live")
+```
+:::
 
 #### Indigenous
 
@@ -374,6 +393,9 @@ make_table(make_objects_2, filtered_employee, "demog_disability_typ")
 
 #### Language
 
+::: panel-tabset
+##### 1
+
 \${get_question("demog_lang")}
 
 ```{ojs}
@@ -382,6 +404,18 @@ viewof input_demog_lang = make_input_2(employee, "demog_lang")
 html`<br>`
 make_table(make_objects_2, filtered_employee, "demog_lang")
 ```
+
+##### 2
+
+\${get_question("demog_language_work")}
+
+```{ojs}
+
+viewof input_demog_language_work = make_input_2(employee, "demog_language_work")
+html`<br>`
+make_table(make_objects_2, filtered_employee, "demog_language_work")
+```
+:::
 
 #### Education
 
@@ -504,7 +538,7 @@ html`<br>`
 make_table(make_objects_1, filtered_employee, "demog_current_wrk")
 ```
 :::
-::::::::
+::::::::::
 
 ### Perspectives
 
