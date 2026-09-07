@@ -383,7 +383,7 @@ employer$emp_reput |>
 #| label: barriers
 
 employer_1 |>
-  select(emp_sal:emp_reput) |>
+  select(emp_sal, emp_qual, emp_contr, emp_geo, emp_pipe, emp_reput) |>
   drop_na() |> 
   ggstats::gglikert(
     variable_labels = c(

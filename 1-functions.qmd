@@ -59,6 +59,14 @@ pivot_longer_1 <- function(data, column) {
 ```
 
 ```{r}
+#| label: count
+
+count <- function(..., name = "count") {
+  dplyr::count(..., name = name)
+}
+```
+
+```{r}
 #| label: top
 
 top <- function(data, n, drop_other = TRUE) {
@@ -70,7 +78,7 @@ top <- function(data, n, drop_other = TRUE) {
   }))
   if (drop_other == FALSE) {
     data |> 
-      count(.data[[column]], wt = count, name = "count") |> 
+      count(.data[[column]], wt = count) |> 
       mutate(pct = count / n_respondents[[column]])
   } else {
     data |> 
@@ -96,7 +104,7 @@ other_if <- function(data, less_than_or_equal_to, include = NULL) {
     }))
   }
   data |> 
-    count(.data[[column]], wt = count, name = "count") |> 
+    count(.data[[column]], wt = count) |> 
     mutate(pct = count / n_respondents[[column]])
 }
 ```
@@ -123,13 +131,11 @@ theme_1 <- function(...) {
 ```{r}
 #| label: ggplot-1
 
-ggplot_1 <- function(
-  data,
-  geom_text_size = get_geom_defaults(geom_text)$size,
-  drop_empty = TRUE
-) {
-  column <- names(data)[1]
-  n <- n_respondents[[column]]
+ggplot_1 <- function(data,
+                     column = names(data)[1],
+                     n = n_respondents[[column]],
+                     geom_text_size = get_geom_defaults(geom_text)$size,
+                     drop_empty = TRUE) {
   data |>
     mutate(pct = scales::label_percent(accuracy = 1)(pct)) |> 
     ggplot(aes(x = .data[[column]], y = count, fill = .data[[column]])) +

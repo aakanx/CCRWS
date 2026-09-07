@@ -15,8 +15,10 @@ dict <- read_csv(".data/dictionary-2026-09-04.csv") |>
     # section_header, field_note, branching_logic, 
     # required_field, matrix_group_name, field_annotation
   ) |>
-  filter_out(field_type %in% c("descriptive")) |>
-  filter_out(field_name |> str_starts("language")) |> 
+  filter_out(
+    field_type %in% c("descriptive") |
+    field_name |> str_starts("language")
+  ) |> 
   mutate(
     form_name = form_name |> replace_values(
       "form_1" ~ "employee_1",

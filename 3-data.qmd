@@ -118,7 +118,7 @@ employee <- set_names(c(
   map(\(x) {
     column <- names(employee_2[[x]])[2]
     employee_2[[x]] |> 
-      count(.data[[column]], name = "count") |> 
+      count(.data[[column]]) |> 
       mutate(pct = count / n_respondents[[x]])
   })
 ```
@@ -211,7 +211,7 @@ employer <- set_names(c(
   map(\(x) {
     column <- names(employer_2[[x]])[2]
     employer_2[[x]] |> 
-      count(.data[[column]], name = "count") |> 
+      count(.data[[column]]) |> 
       mutate(pct = count / n_respondents[[x]])
   })
 ```
