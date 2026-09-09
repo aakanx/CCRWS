@@ -1,6 +1,4 @@
 ---
-fig-width: 8
-fig-height: 4.5
 output-file: "Survey-2026-Employee"
 ---
 
@@ -13,6 +11,8 @@ source_qmd("1-functions.qmd")
 source_qmd("2-dict.qmd")
 source_qmd("3-data.qmd")
 ```
+
+\newpage
 
 ## Employee
 
@@ -31,6 +31,8 @@ employee$demog_gen |>
   labs(title = "Gender")
 ```
 
+\newpage
+
 #### Age
 
 ```{r}
@@ -44,6 +46,8 @@ employee$demog_age |>
   ) +
   labs(title = "Age")
 ```
+
+\newpage
 
 #### Location
 
@@ -76,6 +80,8 @@ employee$demog_locat |>
   ) +
   labs(title = "In what province or territory is your work primarily based?")
 ```
+
+\newpage
 
 ##### 2
 
@@ -130,6 +136,8 @@ employee$demog_minority |>
   theme(plot.caption = element_text(hjust = 0.5))
 ```
 
+\newpage
+
 ##### 2
 
 ```{r}
@@ -154,6 +162,8 @@ employee$demog_popu |>
 ```
 :::
 
+\newpage
+
 #### Disability
 
 ::: panel-tabset
@@ -168,6 +178,8 @@ employee$demog_disability |>
   scale_x_discrete(labels = choices$demog_disability) +
   labs(title = "Do you identify as a person with a disability?")
 ```
+
+\newpage
 
 ##### 2
 
@@ -192,6 +204,8 @@ employee$demog_disability_typ |>
 ```
 :::
 
+\newpage
+
 #### Language
 
 ::: panel-tabset
@@ -208,6 +222,8 @@ employee$demog_lang |>
       str_split_i(" \\(", 1)
   )
 ```
+
+\newpage
 
 ##### 2
 
@@ -233,6 +249,8 @@ employee$demog_language_work |>
 ```
 :::
 
+\newpage
+
 #### Education
 
 ::: panel-tabset
@@ -251,6 +269,8 @@ employee$demog_iehp |>
       str_split_i(" \n", 2),
   )
 ```
+
+\newpage
 
 ##### 2
 
@@ -300,6 +320,8 @@ employee$demog_cr_cert |>
 ```
 :::
 
+\newpage
+
 #### Employment
 
 ::: panel-tabset
@@ -321,6 +343,8 @@ employee$demog_employ_typ |>
   ) +
   labs(title = get_question("demog_employ_typ"))
 ```
+
+\newpage
 
 ##### 2
 
@@ -385,6 +409,8 @@ employee$demog_role |>
 ```
 :::
 
+\newpage
+
 #### Experience
 
 ::: panel-tabset
@@ -398,6 +424,8 @@ employee$demog_wrk_yr |>
   scale_x_discrete(labels = choices$demog_wrk_yr) +
   labs(title = get_question("demog_wrk_yr"))
 ```
+
+\newpage
 
 ##### 2
 
@@ -413,6 +441,8 @@ employee$demog_current_wrk |>
 ```
 :::
 ::::::::::
+
+\newpage
 
 ### Perspectives
 
@@ -433,6 +463,8 @@ employee$role_jobmatch |>
       str_wrap(55),
   )
 ```
+
+\newpage
 
 ##### 2
 
@@ -477,6 +509,8 @@ employee$role_complex |>
 ```
 :::
 
+\newpage
+
 #### Career advancement
 
 ::: panel-tabset
@@ -493,6 +527,8 @@ employee$career_ladder |>
       str_wrap(70)
   )
 ```
+
+\newpage
 
 ##### 2
 
@@ -539,6 +575,8 @@ employee$career_crdtl |>
 ```
 :::
 
+\newpage
+
 #### Team capacity
 
 ::: panel-tabset
@@ -556,6 +594,8 @@ employee$ret_max |>
   )
 ```
 
+\newpage
+
 ##### 2
 
 ```{r}
@@ -570,6 +610,8 @@ employee$ret_struggle |>
   )
 ```
 :::
+
+\newpage
 
 #### Job change
 
@@ -587,6 +629,8 @@ employee$career_leav |>
       str_wrap(53),
   )
 ```
+
+\newpage
 
 ##### 2
 
@@ -610,6 +654,8 @@ employee$career_int |>
   )
 ```
 :::
+
+\newpage
 
 #### Unemployed
 
@@ -639,6 +685,8 @@ employee$unemp_challeng |>
     caption = "top 5 selections"
   )
 ```
+
+\newpage
 
 ##### 2
 
