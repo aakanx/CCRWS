@@ -275,6 +275,18 @@ filtered_employee = employee.filter(aq.escape(d =>
 // .every() for AND, intersection
 ```
 
+```{r}
+#| label: write-ojs
+
+source("write-ojs.R")
+chunks <- c(
+  set_names(columns_employee_single_select) |> 
+    map(\(x) write_ojs(1, x)),
+  set_names(columns_employee_multi_select) |> 
+    map(\(x) write_ojs(2, x))
+)
+```
+
 ## Employee
 
 ### Demographics
@@ -282,24 +294,18 @@ filtered_employee = employee.filter(aq.escape(d =>
 :::::::::: panel-tabset
 #### Gender
 
-\${get_question("demog_gen")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_demog_gen = make_input_1(employee, "demog_gen")
-html`<br>`
-make_table(make_objects_1, filtered_employee, "demog_gen")
+chunks$demog_gen
 ```
 
 #### Age
 
-\${get_question("demog_age")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_demog_age = make_input_1(employee, "demog_age")
-html`<br>`
-make_table(make_objects_1, filtered_employee, "demog_age")
+chunks$demog_age
 ```
 
 #### Location
@@ -307,36 +313,27 @@ make_table(make_objects_1, filtered_employee, "demog_age")
 ::: panel-tabset
 ##### 1
 
-\${get_question("demog_locat")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_demog_locat = make_input_1(employee, "demog_locat")
-html`<br>`
-make_table(make_objects_1, filtered_employee, "demog_locat")
+chunks$demog_locat
 ```
 
 ##### 2
 
-\${get_question("demog_locat_live")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_demog_locat_live = make_input_1(employee, "demog_locat_live")
-html`<br>`
-make_table(make_objects_1, filtered_employee, "demog_locat_live")
+chunks$demog_locat_live
 ```
 :::
 
 #### Indigenous
 
-\${get_question("demog_indig")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_demog_indig = make_input_1(employee, "demog_indig")
-html`<br>`
-make_table(make_objects_1, filtered_employee, "demog_indig")
+chunks$demog_indig
 ```
 
 #### Minority
@@ -344,24 +341,18 @@ make_table(make_objects_1, filtered_employee, "demog_indig")
 ::: panel-tabset
 ##### 1
 
-\${get_question("demog_minority")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_demog_minority = make_input_1(employee, "demog_minority")
-html`<br>`
-make_table(make_objects_1, filtered_employee, "demog_minority")
+chunks$demog_minority
 ```
 
 ##### 2
 
-\${get_question("demog_popu")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_demog_popu = make_input_2(employee, "demog_popu")
-html`<br>`
-make_table(make_objects_2, filtered_employee, "demog_popu")
+chunks$demog_popu
 ```
 :::
 
@@ -370,24 +361,18 @@ make_table(make_objects_2, filtered_employee, "demog_popu")
 ::: panel-tabset
 ##### 1
 
-\${get_question("demog_disability")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_demog_disability = make_input_1(employee, "demog_disability")
-html`<br>`
-make_table(make_objects_1, filtered_employee, "demog_disability")
+chunks$demog_disability
 ```
 
 ##### 2
 
-\${get_question("demog_disability_typ")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_demog_disability_typ = make_input_2(employee, "demog_disability_typ")
-html`<br>`
-make_table(make_objects_2, filtered_employee, "demog_disability_typ")
+chunks$demog_disability_typ
 ```
 :::
 
@@ -396,24 +381,18 @@ make_table(make_objects_2, filtered_employee, "demog_disability_typ")
 ::: panel-tabset
 ##### 1
 
-\${get_question("demog_lang")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_demog_lang = make_input_2(employee, "demog_lang")
-html`<br>`
-make_table(make_objects_2, filtered_employee, "demog_lang")
+chunks$demog_lang
 ```
 
 ##### 2
 
-\${get_question("demog_language_work")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_demog_language_work = make_input_2(employee, "demog_language_work")
-html`<br>`
-make_table(make_objects_2, filtered_employee, "demog_language_work")
+chunks$demog_language_work
 ```
 :::
 
@@ -422,46 +401,34 @@ make_table(make_objects_2, filtered_employee, "demog_language_work")
 ::: panel-tabset
 ##### 1
 
-\${get_question("demog_iehp")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_demog_iehp = make_input_1(employee, "demog_iehp")
-html`<br>`
-make_table(make_objects_1, filtered_employee, "demog_iehp")
+chunks$demog_iehp
 ```
 
 ##### 2
 
-\${get_question("demog_edu")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_demog_edu = make_input_1(employee, "demog_edu")
-html`<br>`
-make_table(make_objects_1, filtered_employee, "demog_edu")
+chunks$demog_edu
 ```
 
 ##### 3
 
-\${get_question("demog_cr")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_demog_cr = make_input_1(employee, "demog_cr")
-html`<br>`
-make_table(make_objects_1, filtered_employee, "demog_cr")
+chunks$demog_cr
 ```
 
 ##### 4
 
-\${get_question("demog_cr_cert")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_demog_cr_cert = make_input_1(employee, "demog_cr_cert")
-html`<br>`
-make_table(make_objects_1, filtered_employee, "demog_cr_cert")
+chunks$demog_cr_cert
 ```
 :::
 
@@ -470,46 +437,34 @@ make_table(make_objects_1, filtered_employee, "demog_cr_cert")
 ::: panel-tabset
 ##### 1
 
-\${get_question("demog_employ_typ")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_demog_employ_typ = make_input_1(employee, "demog_employ_typ")
-html`<br>`
-make_table(make_objects_1, filtered_employee, "demog_employ_typ")
+chunks$demog_employ_typ
 ```
 
 ##### 2
 
-\${get_question("demog_sector")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_demog_sector = make_input_1(employee, "demog_sector")
-html`<br>`
-make_table(make_objects_1, filtered_employee, "demog_sector")
+chunks$demog_sector
 ```
 
 ##### 3
 
-\${get_question("demog_commun")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_demog_commun = make_input_1(employee, "demog_commun")
-html`<br>`
-make_table(make_objects_1, filtered_employee, "demog_commun")
+chunks$demog_commun
 ```
 
 ##### 4
 
-\${get_question("demog_role")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_demog_role = make_input_2(employee, "demog_role")
-html`<br>`
-make_table(make_objects_2, filtered_employee, "demog_role")
+chunks$demog_role
 ```
 :::
 
@@ -518,24 +473,18 @@ make_table(make_objects_2, filtered_employee, "demog_role")
 ::: panel-tabset
 ##### 1
 
-\${get_question("demog_wrk_yr")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_demog_wrk_yr = make_input_1(employee, "demog_wrk_yr")
-html`<br>`
-make_table(make_objects_1, filtered_employee, "demog_wrk_yr")
+chunks$demog_wrk_yr
 ```
 
 ##### 2
 
-\${get_question("demog_current_wrk")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_demog_current_wrk = make_input_1(employee, "demog_current_wrk")
-html`<br>`
-make_table(make_objects_1, filtered_employee, "demog_current_wrk")
+chunks$demog_current_wrk
 ```
 :::
 ::::::::::
@@ -548,46 +497,34 @@ make_table(make_objects_1, filtered_employee, "demog_current_wrk")
 ::: panel-tabset
 ##### 1
 
-\${get_question("role_jobmatch")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_role_jobmatch = make_input_1(employee, "role_jobmatch")
-html`<br>`
-make_table(make_objects_1, filtered_employee, "role_jobmatch")
+chunks$role_jobmatch
 ```
 
 ##### 2
 
-\${get_question("role_compensation")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_role_compensation = make_input_1(employee, "role_compensation")
-html`<br>`
-make_table(make_objects_1, filtered_employee, "role_compensation")
+chunks$role_compensation
 ```
 
 ##### 3
 
-\${get_question("role_overtime")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_role_overtime = make_input_1(employee, "role_overtime")
-html`<br>`
-make_table(make_objects_1, filtered_employee, "role_overtime")
+chunks$role_overtime
 ```
 
 ##### 4
 
-\${get_question("role_complex")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_role_complex = make_input_1(employee, "role_complex")
-html`<br>`
-make_table(make_objects_1, filtered_employee, "role_complex")
+chunks$role_complex
 ```
 :::
 
@@ -596,46 +533,34 @@ make_table(make_objects_1, filtered_employee, "role_complex")
 ::: panel-tabset
 ##### 1
 
-\${get_question("career_ladder")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_career_ladder = make_input_1(employee, "career_ladder")
-html`<br>`
-make_table(make_objects_1, filtered_employee, "career_ladder")
+chunks$career_ladder
 ```
 
 ##### 2
 
-\${get_question("career_support")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_career_support = make_input_1(employee, "career_support")
-html`<br>`
-make_table(make_objects_1, filtered_employee, "career_support")
+chunks$career_support
 ```
 
 ##### 3
 
-\${get_question("career_workload")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_career_workload = make_input_1(employee, "career_workload")
-html`<br>`
-make_table(make_objects_1, filtered_employee, "career_workload")
+chunks$career_workload
 ```
 
 ##### 4
 
-\${get_question("career_crdtl")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_career_crdtl = make_input_1(employee, "career_crdtl")
-html`<br>`
-make_table(make_objects_1, filtered_employee, "career_crdtl")
+chunks$career_crdtl
 ```
 :::
 
@@ -644,24 +569,18 @@ make_table(make_objects_1, filtered_employee, "career_crdtl")
 ::: panel-tabset
 ##### 1
 
-\${get_question("ret_max")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_ret_max = make_input_1(employee, "ret_max")
-html`<br>`
-make_table(make_objects_1, filtered_employee, "ret_max")
+chunks$ret_max
 ```
 
 ##### 2
 
-\${get_question("ret_struggle")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_ret_struggle = make_input_1(employee, "ret_struggle")
-html`<br>`
-make_table(make_objects_1, filtered_employee, "ret_struggle")
+chunks$ret_struggle
 ```
 :::
 
@@ -670,24 +589,18 @@ make_table(make_objects_1, filtered_employee, "ret_struggle")
 ::: panel-tabset
 ##### 1
 
-\${get_question("career_leav")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_career_leav = make_input_1(employee, "career_leav")
-html`<br>`
-make_table(make_objects_1, filtered_employee, "career_leav")
+chunks$career_leav
 ```
 
 ##### 2
 
-\${get_question("career_int")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_career_int = make_input_2(employee, "career_int")
-html`<br>`
-make_table(make_objects_2, filtered_employee, "career_int")
+chunks$career_int
 ```
 :::
 
@@ -696,35 +609,26 @@ make_table(make_objects_2, filtered_employee, "career_int")
 ::: panel-tabset
 ##### 1
 
-\${get_question("unemp_challeng")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_unemp_challeng = make_input_2(employee, "unemp_challeng")
-html`<br>`
-make_table(make_objects_2, filtered_employee, "unemp_challeng")
+chunks$unemp_challeng
 ```
 
 ##### 2
 
-\${get_question("unemp_miss")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_unemp_miss = make_input_2(employee, "unemp_miss")
-html`<br>`
-make_table(make_objects_2, filtered_employee, "unemp_miss")
+chunks$unemp_miss
 ```
 
 ##### 3
 
-\${get_question("unemp_jobsearch")}
+```{r}
+#| output: asis
 
-```{ojs}
-
-viewof input_unemp_jobsearch = make_input_2(employee, "unemp_jobsearch")
-html`<br>`
-make_table(make_objects_2, filtered_employee, "unemp_jobsearch")
+chunks$unemp_jobsearch
 ```
 :::
 ::::::::
