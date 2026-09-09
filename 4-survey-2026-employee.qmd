@@ -1,5 +1,8 @@
 ---
 output-file: "Survey-2026-Employee"
+format:
+  typst:
+    toc-title: "Employee"
 ---
 
 ```{r}
@@ -12,14 +15,16 @@ source_qmd("2-dict.qmd")
 source_qmd("3-data.qmd")
 ```
 
-\newpage
+{{< pagebreak >}}
 
-## Employee
+::: {.content-hidden unless-format="html"}
+# Employee
+:::
 
-### Demographics
+## Demographics
 
 :::::::::: panel-tabset
-#### Gender
+### Gender
 
 ```{r}
 #| label: demog-gen
@@ -31,9 +36,9 @@ employee$demog_gen |>
   labs(title = "Gender")
 ```
 
-\newpage
+{{< pagebreak >}}
 
-#### Age
+### Age
 
 ```{r}
 #| label: demog-age
@@ -47,12 +52,12 @@ employee$demog_age |>
   labs(title = "Age")
 ```
 
-\newpage
+{{< pagebreak >}}
 
-#### Location
+### Location
 
 ::: panel-tabset
-##### 1
+#### 1
 
 ```{r}
 #| label: demog-locat
@@ -81,9 +86,9 @@ employee$demog_locat |>
   labs(title = "In what province or territory is your work primarily based?")
 ```
 
-\newpage
+{{< pagebreak >}}
 
-##### 2
+#### 2
 
 ```{r}
 #| label: demog-locat-live
@@ -100,7 +105,7 @@ employee$demog_locat_live |>
 ```
 :::
 
-#### Indigenous
+### Indigenous
 
 ```{r}
 #| label: demog-indig
@@ -112,10 +117,10 @@ employee$demog_indig |>
   labs(title = "Do you identify as Indigenous (First Nations, Métis, Inuit)?")
 ```
 
-#### Minority
+### Minority
 
 ::: panel-tabset
-##### 1
+#### 1
 
 ```{r}
 #| label: demog-minority
@@ -136,9 +141,9 @@ employee$demog_minority |>
   theme(plot.caption = element_text(hjust = 0.5))
 ```
 
-\newpage
+{{< pagebreak >}}
 
-##### 2
+#### 2
 
 ```{r}
 #| label: demog-popu
@@ -162,12 +167,12 @@ employee$demog_popu |>
 ```
 :::
 
-\newpage
+{{< pagebreak >}}
 
-#### Disability
+### Disability
 
 ::: panel-tabset
-##### 1
+#### 1
 
 ```{r}
 #| label: demog-disability
@@ -179,9 +184,9 @@ employee$demog_disability |>
   labs(title = "Do you identify as a person with a disability?")
 ```
 
-\newpage
+{{< pagebreak >}}
 
-##### 2
+#### 2
 
 ```{r}
 #| label: demog-disability-typ
@@ -204,12 +209,12 @@ employee$demog_disability_typ |>
 ```
 :::
 
-\newpage
+{{< pagebreak >}}
 
-#### Language
+### Language
 
 ::: panel-tabset
-##### 1
+#### 1
 
 ```{r}
 #| label: demog-lang
@@ -223,9 +228,9 @@ employee$demog_lang |>
   )
 ```
 
-\newpage
+{{< pagebreak >}}
 
-##### 2
+#### 2
 
 ```{r}
 #| label: demog-language-work
@@ -249,12 +254,12 @@ employee$demog_language_work |>
 ```
 :::
 
-\newpage
+{{< pagebreak >}}
 
-#### Education
+### Education
 
 ::: panel-tabset
-##### 1
+#### 1
 
 ```{r}
 #| label: demog-iehp
@@ -270,9 +275,9 @@ employee$demog_iehp |>
   )
 ```
 
-\newpage
+{{< pagebreak >}}
 
-##### 2
+#### 2
 
 ```{r}
 #| label: demog-edu
@@ -295,7 +300,7 @@ employee$demog_edu |>
   )
 ```
 
-##### 3
+#### 3
 
 ```{r}
 #| label: demog-cr
@@ -307,7 +312,7 @@ employee$demog_cr |>
   labs(title = "Have you completed a post-graduate diploma,\ncertificate, or degree in Clinical Research?")
 ```
 
-##### 4
+#### 4
 
 ```{r}
 #| label: demog-cr-cert
@@ -320,12 +325,12 @@ employee$demog_cr_cert |>
 ```
 :::
 
-\newpage
+{{< pagebreak >}}
 
-#### Employment
+### Employment
 
 ::: panel-tabset
-##### 1
+#### 1
 
 ```{r}
 #| label: demog-employ-typ
@@ -344,9 +349,9 @@ employee$demog_employ_typ |>
   labs(title = get_question("demog_employ_typ"))
 ```
 
-\newpage
+{{< pagebreak >}}
 
-##### 2
+#### 2
 
 ```{r}
 #| label: demog-sector
@@ -368,7 +373,7 @@ employee$demog_sector |>
   )
 ```
 
-##### 3
+#### 3
 
 ```{r}
 #| label: demog-commun
@@ -388,7 +393,7 @@ employee$demog_commun |>
   )
 ```
 
-##### 4
+#### 4
 
 ```{r}
 #| label: demog-role
@@ -409,12 +414,12 @@ employee$demog_role |>
 ```
 :::
 
-\newpage
+{{< pagebreak >}}
 
-#### Experience
+### Experience
 
 ::: panel-tabset
-##### 1
+#### 1
 
 ```{r}
 #| label: demog-wrk-yr
@@ -425,9 +430,9 @@ employee$demog_wrk_yr |>
   labs(title = get_question("demog_wrk_yr"))
 ```
 
-\newpage
+{{< pagebreak >}}
 
-##### 2
+#### 2
 
 ```{r}
 #| label: demog-current-wrk
@@ -442,15 +447,15 @@ employee$demog_current_wrk |>
 :::
 ::::::::::
 
-\newpage
+{{< pagebreak >}}
 
-### Perspectives
+## Perspectives
 
 :::::::: panel-tabset
-#### Role context
+### Role context
 
 ::: panel-tabset
-##### 1
+#### 1
 
 ```{r}
 #| label: role-jobmatch
@@ -464,9 +469,9 @@ employee$role_jobmatch |>
   )
 ```
 
-\newpage
+{{< pagebreak >}}
 
-##### 2
+#### 2
 
 ```{r}
 #| label: role-compensation
@@ -480,7 +485,7 @@ employee$role_compensation |>
   )
 ```
 
-##### 3
+#### 3
 
 ```{r}
 #| label: role-overtime
@@ -494,7 +499,7 @@ employee$role_overtime |>
   )
 ```
 
-##### 4
+#### 4
 
 ```{r}
 #| label: role-complex
@@ -509,12 +514,12 @@ employee$role_complex |>
 ```
 :::
 
-\newpage
+{{< pagebreak >}}
 
-#### Career advancement
+### Career advancement
 
 ::: panel-tabset
-##### 1
+#### 1
 
 ```{r}
 #| label: career-ladder
@@ -528,9 +533,9 @@ employee$career_ladder |>
   )
 ```
 
-\newpage
+{{< pagebreak >}}
 
-##### 2
+#### 2
 
 ```{r}
 #| label: career-support
@@ -545,7 +550,7 @@ employee$career_support |>
   )
 ```
 
-##### 3
+#### 3
 
 ```{r}
 #| label: career-workload
@@ -560,7 +565,7 @@ employee$career_workload |>
   )
 ```
 
-##### 4
+#### 4
 
 ```{r}
 #| label: career-crdtl
@@ -575,12 +580,12 @@ employee$career_crdtl |>
 ```
 :::
 
-\newpage
+{{< pagebreak >}}
 
-#### Team capacity
+### Team capacity
 
 ::: panel-tabset
-##### 1
+#### 1
 
 ```{r}
 #| label: ret-max
@@ -594,9 +599,9 @@ employee$ret_max |>
   )
 ```
 
-\newpage
+{{< pagebreak >}}
 
-##### 2
+#### 2
 
 ```{r}
 #| label: ret-struggle
@@ -611,12 +616,12 @@ employee$ret_struggle |>
 ```
 :::
 
-\newpage
+{{< pagebreak >}}
 
-#### Job change
+### Job change
 
 ::: panel-tabset
-##### 1
+#### 1
 
 ```{r}
 #| label: career-leav
@@ -630,9 +635,9 @@ employee$career_leav |>
   )
 ```
 
-\newpage
+{{< pagebreak >}}
 
-##### 2
+#### 2
 
 ```{r}
 #| label: career-int
@@ -655,12 +660,12 @@ employee$career_int |>
 ```
 :::
 
-\newpage
+{{< pagebreak >}}
 
-#### Unemployed
+### Unemployed
 
 ::: panel-tabset
-##### 1
+#### 1
 
 ```{r}
 #| label: unemp-challeng
@@ -686,9 +691,9 @@ employee$unemp_challeng |>
   )
 ```
 
-\newpage
+{{< pagebreak >}}
 
-##### 2
+#### 2
 
 ```{r}
 #| label: unemp-miss
@@ -721,7 +726,7 @@ employee$unemp_miss |>
   )
 ```
 
-##### 3
+#### 3
 
 ```{r}
 #| label: unemp-jobsearch

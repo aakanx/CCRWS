@@ -13,12 +13,14 @@ format:
     toc: true
     toc-title: "On this page"
     toc-depth: 6
+    shift-heading-level-by: 1
     include-in-header:
       text: |
         <link rel="icon" type="image/png" href="favicon.png">
     format-links: false
-  pdf:
+  typst:
     fig-width: 8
     fig-height: 4.5
     toc: true
-    toc-depth: 4
+    toc-depth: 6
+    shift-heading-level-by: -1

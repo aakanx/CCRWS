@@ -1,5 +1,8 @@
 ---
 output-file: "Survey-2026-Employer"
+format:
+  typst:
+    toc-title: "Employer"
 ---
 
 ```{r}
@@ -12,12 +15,14 @@ source_qmd("2-dict.qmd")
 source_qmd("3-data.qmd")
 ```
 
-## Employer
+::: {.content-hidden unless-format="html"}
+# Employer
+:::
 
-### Characteristics
+## Characteristics
 
 ::: panel-tabset
-#### 1
+### 1
 
 ```{r}
 #| label: emp-org-scale
@@ -34,9 +39,9 @@ employer$emp_org_scale |>
   )
 ```
 
-\newpage
+{{< pagebreak >}}
 
-#### 2
+### 2
 
 ```{r}
 #| label: emp-org-typ
@@ -53,7 +58,7 @@ employer$emp_org_typ |>
   labs(title = get_question("emp_org_typ"))
 ```
 
-#### 3
+### 3
 
 ```{r}
 #| label: emp-org-prov
@@ -86,7 +91,7 @@ employer$emp_org_prov |>
   labs(title = "Where in Canada does your organization conduct Clinical Research operations?")
 ```
 
-#### 4
+### 4
 
 ```{r}
 #| label: emp-site
@@ -101,7 +106,7 @@ employer$emp_site |>
   labs(title = get_question("emp_site"))
 ```
 
-#### 5
+### 5
 
 ```{r}
 #| label: emp-certif
@@ -121,12 +126,12 @@ employer$emp_certif |>
 ```
 :::
 
-\newpage
+{{< pagebreak >}}
 
-### Trends
+## Trends
 
 ::: panel-tabset
-#### 1
+### 1
 
 ```{r}
 #| label: emp-applic-trend
@@ -137,9 +142,9 @@ employer$emp_applic_trend |>
   labs(title = get_question("emp_applic_trend"))
 ```
 
-\newpage
+{{< pagebreak >}}
 
-#### 2
+### 2
 
 ```{r}
 #| label: emp-post-fill
@@ -154,7 +159,7 @@ employer$emp_post_fill |>
   )
 ```
 
-#### 3
+### 3
 
 ```{r}
 #| label: emp-indep
@@ -169,12 +174,12 @@ employer$emp_indep |>
 ```
 :::
 
-\newpage
+{{< pagebreak >}}
 
-### Turnover
+## Turnover
 
 ::: panel-tabset
-#### 1
+### 1
 
 ```{r}
 #| label: emp-turnover-rate
@@ -188,9 +193,9 @@ employer$emp_turnover_rate |>
   )
 ```
 
-\newpage
+{{< pagebreak >}}
 
-#### 2
+### 2
 
 ```{r}
 #| label: emp-resig
@@ -201,7 +206,7 @@ employer$emp_resig |>
   labs(title = get_question("emp_resig"))
 ```
 
-#### 3
+### 3
 
 ```{r}
 #| label: emp-termi
@@ -216,12 +221,12 @@ employer$emp_termi |>
 ```
 :::
 
-\newpage
+{{< pagebreak >}}
 
-### Perspectives
+## Perspectives
 
 ::: panel-tabset
-#### 1
+### 1
 
 ```{r}
 #| label: emp-limit-trial
@@ -232,9 +237,9 @@ employer$emp_limit_trial |>
   labs(title = get_question("emp_limit_trial"))
 ```
 
-\newpage
+{{< pagebreak >}}
 
-#### 2
+### 2
 
 ```{r}
 #| label: emp-demand
@@ -255,7 +260,7 @@ employer$emp_demand |>
   )
 ```
 
-#### 3
+### 3
 
 ```{r}
 #| label: emp-shortage
@@ -266,7 +271,7 @@ employer$emp_shortage |>
   labs(title = get_question("emp_shortage"))
 ```
 
-#### 4
+### 4
 
 ```{r}
 #| label: emp-missed-trial
@@ -277,7 +282,7 @@ employer$emp_missed_trial |>
   labs(title = get_question("emp_missed_trial"))
 ```
 
-#### 5
+### 5
 
 ```{r}
 #| label: emp-strategy
@@ -292,12 +297,12 @@ employer$emp_strategy |>
 ```
 :::
 
-\newpage
+{{< pagebreak >}}
 
-### Barriers to recruiting qualified staff
+## Barriers to recruiting qualified staff
 
 ::: panel-tabset
-#### 1
+### 1
 
 ```{r}
 #| label: emp-sal
@@ -311,9 +316,9 @@ employer$emp_sal |>
   )
 ```
 
-\newpage
+{{< pagebreak >}}
 
-#### 2
+### 2
 
 ```{r}
 #| label: emp-qual
@@ -328,7 +333,7 @@ employer$emp_qual |>
   )
 ```
 
-#### 3
+### 3
 
 ```{r}
 #| label: emp-contr
@@ -343,7 +348,7 @@ employer$emp_contr |>
   )
 ```
 
-#### 4
+### 4
 
 ```{r}
 #| label: emp-geo
@@ -357,7 +362,7 @@ employer$emp_geo |>
   )
 ```
 
-#### 5
+### 5
 
 ```{r}
 #| label: emp-pipe
@@ -372,7 +377,7 @@ employer$emp_pipe |>
   )
 ```
 
-#### 6
+### 6
 
 ```{r}
 #| label: emp-reput
@@ -393,7 +398,7 @@ employer$emp_reput |>
   )
 ```
 
-#### 7
+### 7
 
 ```{r}
 #| label: barriers
