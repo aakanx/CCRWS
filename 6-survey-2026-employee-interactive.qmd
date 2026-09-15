@@ -38,11 +38,11 @@ dict <- read_csv(".data/dictionary-2026-09-04.csv") |>
     )
   )
 
-columns_employee_single_select <- dict |>
+columns_single_select <- dict |>
   filter_out(field_type == "checkbox") |> 
   pull(field_name)
 
-columns_employee_multi_select <- dict |>
+columns_multi_select <- dict |>
   filter(field_type == "checkbox") |> 
   pull(field_name)
 ```
@@ -70,11 +70,11 @@ choices <- dict |>
 ```
 
 ```{r}
-#| label: employee
+#| label: data
 #| include: false
 
 # import
-employee <- read_csv(".data/data-2026-09-02-1114.csv") |>
+data <- read_csv(".data/data-2026-09-02-1114.csv") |>
   filter(
     redcap_event_name == "event_1_arm_1",
     landing_page_complete == 2
@@ -87,13 +87,13 @@ employee <- read_csv(".data/data-2026-09-02-1114.csv") |>
   ) |> 
   select(
     record_id,
-    all_of(columns_employee_single_select),
-    contains(columns_employee_multi_select |> paste0("___")),
+    all_of(columns_single_select),
+    contains(columns_multi_select |> paste0("___")),
     starts_with("employee_")
   )
 
 # clean
-employee <- employee |>
+data <- data |>
   select(-ends_with("999")) |> # "PNTA"
   mutate(
     across(-record_id, \(x)
@@ -114,23 +114,23 @@ employee <- employee |>
 #| include: false
 
 ojs_define(
-  employee_from_r = employee,
   dict_from_r = dict,
-  columns_employee_single_select_from_r = columns_employee_single_select,
-  columns_employee_multi_select_from_r = columns_employee_multi_select,
-  choices_from_r = choices
+  columns_single_select_from_r = columns_single_select,
+  columns_multi_select_from_r = columns_multi_select,
+  choices_from_r = choices,
+  data_from_r = data
 )
 ```
 
 ```{ojs data-to-OJS}
 
-employee = aq.table(employee_from_r)
 dict = aq.table(dict_from_r)
-columns_employee_single_select = columns_employee_single_select_from_r
-columns_employee_multi_select = columns_employee_multi_select_from_r
+columns_single_select = columns_single_select_from_r
+columns_multi_select = columns_multi_select_from_r
 choices = Object.fromEntries(
   Object.entries(choices_from_r).map(([k, v]) => [k, aq.table(v)])
 )
+data = aq.table(data_from_r)
 ```
 
 ```{ojs get-question}
@@ -258,21 +258,22 @@ cat("})\n")
 cat("```\n")
 ```
 
-```{ojs filtered-employee}
+```{ojs filtered-data}
 
-filtered_employee = employee.filter(aq.escape(d => 
-  columns_employee_single_select.every(column => 
+filtered_data = data.filter(aq.escape(d => 
+  columns_single_select.every(column => 
     inputs[column].length === 0 || 
     inputs[column].includes(d[column])
   ) &&
-  columns_employee_multi_select.every(column => 
+  columns_multi_select.every(column => 
     inputs[column].length === 0 || 
     inputs[column].some(n => d[column + "___" + n] === 1)
   )
 ))
 
-// .some() for OR, union
-// .every() for AND, intersection
+// .includes(), OR
+// .some(), OR
+// .every(), AND
 ```
 
 ```{r}
@@ -280,9 +281,9 @@ filtered_employee = employee.filter(aq.escape(d =>
 
 source("write-ojs.R")
 chunks <- c(
-  set_names(columns_employee_single_select) |> 
+  set_names(columns_single_select) |> 
     map(\(x) write_ojs(1, x)),
-  set_names(columns_employee_multi_select) |> 
+  set_names(columns_multi_select) |> 
     map(\(x) write_ojs(2, x))
 )
 ```

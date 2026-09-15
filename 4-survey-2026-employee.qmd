@@ -9,7 +9,7 @@ format:
 #| include: false
 
 library(tidyverse)
-source("source_qmd.R")
+source("source-qmd.R")
 source_qmd("1-functions.qmd")
 source_qmd("2-dict.qmd")
 source_qmd("3-data.qmd")
