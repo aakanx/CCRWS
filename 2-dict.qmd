@@ -80,6 +80,9 @@ columns <- list(
     filter(field_type == "notes") |> 
     pull(field_name)
 )
+
+columns$employer_text_ <- columns$employer_text |> 
+  str_subset(negate = TRUE, "emp_org_typ_otr")
 ```
 
 ```{r}

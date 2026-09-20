@@ -12,7 +12,7 @@ library(tidyverse)
 source("source-qmd.R")
 source_qmd("1-functions.qmd")
 source_qmd("2-dict.qmd")
-source_qmd("3-data.qmd")
+source_qmd("3-data-employee.qmd")
 ```
 
 {{< pagebreak >}}
@@ -631,7 +631,7 @@ employee$career_leav |>
   scale_x_discrete(labels = choices$career_leav) +
   labs(
     title = get_question("career_leav") |> 
-      str_wrap(53),
+      str_wrap(53)
   )
 ```
 

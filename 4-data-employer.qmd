@@ -1,0 +1,193 @@
+## data
+
+```{r}
+#| label: import
+
+if (!exists("CCRWS_Survey_2026")) {
+  CCRWS_Survey_2026 <- read_csv(".data/data-2026-09-02-1114.csv")
+}
+```
+
+### employer
+
+```{r}
+#| label: employer
+
+employer_1 <- CCRWS_Survey_2026 |>
+  filter(
+    redcap_event_name == "event_2_arm_2",
+    national_workforce_employer_survey_complete == 2
+  ) |>
+  select(
+    where(\(x) any(!is.na(x))),
+    -c(
+      redcap_event_name,
+      landing_page_timestamp,
+      landing_page_complete,
+      national_workforce_employer_survey_timestamp,
+      national_workforce_employer_survey_complete,
+      starts_with("language"),
+      emp_org_typ_otr,
+      emp_org_strategy
+    )
+  ) |>
+  mutate(
+    record_id = as.character(record_id),
+    across(-record_id, \(x) fct_inseq(as.character(x)))
+  )
+```
+
+```{r}
+#| label: employer-clean-filter-reshape
+
+employer_2 <- c(
+  set_names(columns$employer_single_select) |> 
+    map(\(x) {
+      employer_1 |>
+        drop_na(all_of(x)) |> 
+        select(record_id, all_of(x))
+    }),
+  set_names(columns$employer_multi_select) |> 
+    map(\(x) {
+      employer_1 |> 
+        pivot_longer_1(x)
+    })
+)
+
+employer_2$emp_active_trial <- employer_1 |> 
+  select(record_id, emp_active_trial) |> 
+  mutate(
+    emp_active_trial = emp_active_trial |>
+      as.character() |>
+      replace_values(
+        "3-4" ~ "3",
+        "10-15" ~ "10",
+        "~700" ~ "700",
+        "over 100" ~ "100",
+        "789 actuellement" ~ "789",
+        "donnée inconnue" ~ NA,
+        "pour ma division: 30" ~ NA
+      ) |>
+      as.numeric()
+  ) |> 
+  drop_na()
+
+employer_2$emp_applic <- employer_1 |> 
+  select(record_id, emp_applic) |> 
+  mutate(
+    emp_applic = emp_applic |> 
+      as.character() |> 
+      replace_values(
+        "2-3" ~ "2",
+        "4-5" ~ "4",
+        "30-50" ~ "40",
+        ">50" ~ "51",
+        "around 3-4 applications" ~ "3",
+        "Nurses: 15-20, CRC: 40-50" ~ "31", # (15 + 20 + 40 + 50) / 4
+        "it depends on the position varies from less than 10 to more than 50" ~ "30",
+        "hiring is usually targeted" ~ NA
+      ) |>
+      as.numeric()
+  ) |> 
+  drop_na()
+
+employer_2$emp_role_host <- employer_1 |> 
+  select(record_id, emp_role_host) |>
+  mutate(
+    emp_role_host = emp_role_host |> 
+      as.character() |> 
+      replace_values(
+        "18-25" ~ "21",
+        "~350" ~ "350",
+        "60 FTE" ~ "60",
+        "over 100" ~ "101",
+        "600 actuellement" ~ "600",
+        "+120 most are FTE" ~ "120",
+        "2 FTE, 1 Casual hourly" ~ "2",
+        "2 FTE, 4 contractual" ~ "2",
+        "around 9 different roles" ~ "9",
+        "Operations Director, Scientific Director, Project Managers, Office Assistant, Multimedia Coordinator, Writing coordinator" ~ "7", # one plural, so at least 7
+        "pour ma division: 24" ~ NA
+      ) |> 
+      as.numeric()
+  ) |> 
+  drop_na()
+
+employer_2$emp_perm_role <- employer_1 |> 
+  select(record_id, emp_perm_role) |>
+  mutate(
+    emp_perm_role = emp_perm_role |> 
+      as.character() |> 
+      replace_values(
+        "2 FTE" ~ "2",
+        "environ 50" ~ "50",
+        "over 100" ~ "101",
+        "same" ~ "120", # answered "+120 most are FTE" for emp_role_host
+        "Unknown" ~ NA,
+        "pour ma division: 20" ~ NA
+      ) |> 
+      as.numeric()
+  ) |> 
+  drop_na()
+
+employer_2$emp_vacant_post <- employer_1 |> 
+  select(record_id, emp_vacant_post) |>
+  mutate(
+    emp_vacant_post = emp_vacant_post |> 
+      as.character() |> 
+      replace_values(
+        "between 5-10" ~ "7",
+        "none" ~ NA,
+        "None" ~ NA,
+        "Unknown" ~ NA
+      ) |>
+      as.numeric()
+  ) |> 
+  drop_na()
+```
+
+```{r}
+#| label: employer-n-respondents
+
+temp <- c(
+  set_names(c(columns$employer_single_select, columns$employer_text_)) |>
+    map(\(x) {
+      employer_2[[x]] |> 
+        nrow()
+    }),
+  set_names(columns$employer_multi_select) |> 
+    map(\(x) {
+      employer_2[[x]] |>
+        pull(record_id) |> 
+        n_distinct()
+    })
+)
+
+if (exists("n_respondents")) {
+  if (any(names(temp) %notin% names(n_respondents))) {
+    n_respondents <- c(
+      n_respondents,
+      temp[names(temp) %notin% names(n_respondents)]
+    )
+  }
+} else {
+  n_respondents <- temp
+}
+
+rm(temp)
+```
+
+```{r}
+#| label: employer-count-pct
+
+employer <- set_names(c(
+  columns$employer_single_select,
+  columns$employer_multi_select
+)) |> 
+  map(\(x) {
+    column <- names(employer_2[[x]])[2]
+    employer_2[[x]] |> 
+      count(.data[[column]]) |> 
+      mutate(pct = count / n_respondents[[x]])
+  })
+```
