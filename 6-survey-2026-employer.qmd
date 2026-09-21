@@ -108,15 +108,112 @@ employer$emp_site |>
 
 ### 5
 
+```{r emp-active-trial}
+
+employer_2$emp_active_trial |> 
+  mutate(emp_active_trial = case_when(
+    emp_active_trial < 11 ~ "1-10",
+    emp_active_trial < 51 ~ "11-50",
+    emp_active_trial < 201 ~ "51-200",
+    .default = "> 200"
+  )) |>
+  count(emp_active_trial) |> 
+  mutate(
+    pct = count / sum(count),
+    emp_active_trial = emp_active_trial |> 
+      fct_relevel("> 200", after = Inf)
+  ) |> 
+  ggplot_1() +
+  labs(
+    title = get_question("emp_active_trial") |> 
+      str_wrap(55)
+  )
+```
+
+### 6
+
+```{r emp_role_host}
+
+employer_2$emp_role_host |> 
+  mutate(emp_role_host = case_when(
+    emp_role_host < 11 ~ "1-10",
+    emp_role_host < 101 ~ "11-100",
+    emp_role_host < 1001 ~ "101-1000",
+    .default = "> 1000"
+  )) |> 
+  count(emp_role_host) |> 
+  mutate(
+    pct = count / sum(count),
+    emp_role_host = emp_role_host |> 
+      fct_relevel("101-1000", "> 1000", after = Inf)
+  ) |>
+  ggplot_1() +
+  labs(
+    title = get_question("emp_role_host") |> 
+      str_remove(" \\(.*\\)")
+  )
+```
+
+### 7
+
+```{r emp_perm_role}
+
+employer_2$emp_perm_role |> 
+  mutate(emp_perm_role = case_when(
+    emp_perm_role < 1 ~ "0",
+    emp_perm_role < 11 ~ "1-10",
+    emp_perm_role < 101 ~ "11-100",
+    .default = "> 100"
+  )) |> 
+  count(emp_perm_role) |> 
+  mutate(
+    pct = count / sum(count),
+    emp_perm_role = emp_perm_role |> 
+      fct_relevel("> 100", after = Inf)
+  ) |>
+  ggplot_1() +
+  labs(
+    title = get_question("emp_perm_role") |>
+      str_replace("\\[", "\n(") |> 
+      str_replace("\\]", ")")
+  )
+```
+
+### 8
+
+```{r emp-vacant-post}
+
+employer_2$emp_vacant_post |>
+  mutate(emp_vacant_post = case_when(
+    emp_vacant_post == "0" ~ "No",
+    emp_vacant_post != "0" ~ "Yes"
+  )) |>
+  count(emp_vacant_post) |>
+  mutate(pct = count / sum(count)) |>
+  ggplot_1() +
+  labs(
+    title = "Are there currently any Clinical Research positions within your organization that are unfilled and actively being recruited for?" |> 
+      str_wrap(70)
+  )
+```
+
+### 9
+
 ```{r}
 #| label: emp-certif
 
 employer$emp_certif |>
-  ggplot_1() +
+  mutate(
+    emp_certif = emp_certif |>
+      fct_expand("4", after = 3)
+  ) |>
+  ggplot_1(drop_empty = FALSE) +
   scale_x_discrete(
     labels = choices$emp_certif |> 
+      str_replace(" nor ", "/") |> 
       str_replace("clinical research staff.", "Clinical Research staff") |>
-      str_wrap(30)
+      str_wrap(30),
+    drop = FALSE
   ) +
   labs(
     title = get_question("emp_certif") |>
@@ -133,6 +230,29 @@ employer$emp_certif |>
 ::: panel-tabset
 ### 1
 
+```{r emp-applic}
+
+employer_2$emp_applic |> 
+  mutate(emp_applic = case_when(
+    emp_applic < 11 ~ "0-10",
+    emp_applic < 51 ~ "11-50",
+    .default = "> 50"
+  )) |> 
+  count(emp_applic) |> 
+  mutate(
+    pct = count / sum(count),
+    emp_applic = emp_applic |> fct_relevel("> 50", after = Inf)
+  ) |>
+  ggplot_1() +
+  labs(
+    title = get_question("emp_applic") |> 
+      str_match("how.*role\\?") |> 
+      str_replace("how", "How")
+  )
+```
+
+### 2
+
 ```{r}
 #| label: emp-applic-trend
 
@@ -144,7 +264,7 @@ employer$emp_applic_trend |>
 
 {{< pagebreak >}}
 
-### 2
+### 3
 
 ```{r}
 #| label: emp-post-fill
@@ -159,7 +279,7 @@ employer$emp_post_fill |>
   )
 ```
 
-### 3
+### 4
 
 ```{r}
 #| label: emp-indep
