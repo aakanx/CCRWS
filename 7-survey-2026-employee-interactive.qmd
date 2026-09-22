@@ -288,12 +288,12 @@ chunks <- c(
 )
 ```
 
-## Employee
+# Employee
 
-### Demographics
+## Demographics
 
 :::::::::: panel-tabset
-#### Gender
+### Gender
 
 ```{r}
 #| output: asis
@@ -301,7 +301,7 @@ chunks <- c(
 chunks$demog_gen
 ```
 
-#### Age
+### Age
 
 ```{r}
 #| output: asis
@@ -309,10 +309,10 @@ chunks$demog_gen
 chunks$demog_age
 ```
 
-#### Location
+### Location
 
 ::: panel-tabset
-##### 1
+#### 1
 
 ```{r}
 #| output: asis
@@ -320,7 +320,7 @@ chunks$demog_age
 chunks$demog_locat
 ```
 
-##### 2
+#### 2
 
 ```{r}
 #| output: asis
@@ -329,7 +329,7 @@ chunks$demog_locat_live
 ```
 :::
 
-#### Indigenous
+### Indigenous
 
 ```{r}
 #| output: asis
@@ -337,10 +337,10 @@ chunks$demog_locat_live
 chunks$demog_indig
 ```
 
-#### Minority
+### Minority
 
 ::: panel-tabset
-##### 1
+#### 1
 
 ```{r}
 #| output: asis
@@ -348,7 +348,7 @@ chunks$demog_indig
 chunks$demog_minority
 ```
 
-##### 2
+#### 2
 
 ```{r}
 #| output: asis
@@ -357,10 +357,10 @@ chunks$demog_popu
 ```
 :::
 
-#### Disability
+### Disability
 
 ::: panel-tabset
-##### 1
+#### 1
 
 ```{r}
 #| output: asis
@@ -368,7 +368,7 @@ chunks$demog_popu
 chunks$demog_disability
 ```
 
-##### 2
+#### 2
 
 ```{r}
 #| output: asis
@@ -377,10 +377,10 @@ chunks$demog_disability_typ
 ```
 :::
 
-#### Language
+### Language
 
 ::: panel-tabset
-##### 1
+#### 1
 
 ```{r}
 #| output: asis
@@ -388,7 +388,7 @@ chunks$demog_disability_typ
 chunks$demog_lang
 ```
 
-##### 2
+#### 2
 
 ```{r}
 #| output: asis
@@ -397,10 +397,10 @@ chunks$demog_language_work
 ```
 :::
 
-#### Education
+### Education
 
 ::: panel-tabset
-##### 1
+#### 1
 
 ```{r}
 #| output: asis
@@ -408,7 +408,7 @@ chunks$demog_language_work
 chunks$demog_iehp
 ```
 
-##### 2
+#### 2
 
 ```{r}
 #| output: asis
@@ -416,7 +416,7 @@ chunks$demog_iehp
 chunks$demog_edu
 ```
 
-##### 3
+#### 3
 
 ```{r}
 #| output: asis
@@ -424,7 +424,7 @@ chunks$demog_edu
 chunks$demog_cr
 ```
 
-##### 4
+#### 4
 
 ```{r}
 #| output: asis
@@ -433,10 +433,10 @@ chunks$demog_cr_cert
 ```
 :::
 
-#### Employment
+### Employment
 
 ::: panel-tabset
-##### 1
+#### 1
 
 ```{r}
 #| output: asis
@@ -444,7 +444,7 @@ chunks$demog_cr_cert
 chunks$demog_employ_typ
 ```
 
-##### 2
+#### 2
 
 ```{r}
 #| output: asis
@@ -452,7 +452,7 @@ chunks$demog_employ_typ
 chunks$demog_sector
 ```
 
-##### 3
+#### 3
 
 ```{r}
 #| output: asis
@@ -460,7 +460,7 @@ chunks$demog_sector
 chunks$demog_commun
 ```
 
-##### 4
+#### 4
 
 ```{r}
 #| output: asis
@@ -469,10 +469,10 @@ chunks$demog_role
 ```
 :::
 
-#### Experience
+### Experience
 
 ::: panel-tabset
-##### 1
+#### 1
 
 ```{r}
 #| output: asis
@@ -480,7 +480,7 @@ chunks$demog_role
 chunks$demog_wrk_yr
 ```
 
-##### 2
+#### 2
 
 ```{r}
 #| output: asis
@@ -490,13 +490,13 @@ chunks$demog_current_wrk
 :::
 ::::::::::
 
-### Perspectives
+## Perspectives
 
 :::::::: panel-tabset
-#### Role context
+### Role context
 
 ::: panel-tabset
-##### 1
+#### 1
 
 ```{r}
 #| output: asis
@@ -504,7 +504,7 @@ chunks$demog_current_wrk
 chunks$role_jobmatch
 ```
 
-##### 2
+#### 2
 
 ```{r}
 #| output: asis
@@ -512,7 +512,7 @@ chunks$role_jobmatch
 chunks$role_compensation
 ```
 
-##### 3
+#### 3
 
 ```{r}
 #| output: asis
@@ -520,7 +520,7 @@ chunks$role_compensation
 chunks$role_overtime
 ```
 
-##### 4
+#### 4
 
 ```{r}
 #| output: asis
@@ -529,10 +529,10 @@ chunks$role_complex
 ```
 :::
 
-#### Career advancement
+### Career advancement
 
 ::: panel-tabset
-##### 1
+#### 1
 
 ```{r}
 #| output: asis
@@ -540,7 +540,7 @@ chunks$role_complex
 chunks$career_ladder
 ```
 
-##### 2
+#### 2
 
 ```{r}
 #| output: asis
@@ -548,7 +548,7 @@ chunks$career_ladder
 chunks$career_support
 ```
 
-##### 3
+#### 3
 
 ```{r}
 #| output: asis
@@ -556,7 +556,7 @@ chunks$career_support
 chunks$career_workload
 ```
 
-##### 4
+#### 4
 
 ```{r}
 #| output: asis
@@ -565,10 +565,10 @@ chunks$career_crdtl
 ```
 :::
 
-#### Team capacity
+### Team capacity
 
 ::: panel-tabset
-##### 1
+#### 1
 
 ```{r}
 #| output: asis
@@ -576,7 +576,7 @@ chunks$career_crdtl
 chunks$ret_max
 ```
 
-##### 2
+#### 2
 
 ```{r}
 #| output: asis
@@ -585,10 +585,10 @@ chunks$ret_struggle
 ```
 :::
 
-#### Job change
+### Job change
 
 ::: panel-tabset
-##### 1
+#### 1
 
 ```{r}
 #| output: asis
@@ -596,7 +596,7 @@ chunks$ret_struggle
 chunks$career_leav
 ```
 
-##### 2
+#### 2
 
 ```{r}
 #| output: asis
@@ -605,10 +605,10 @@ chunks$career_int
 ```
 :::
 
-#### Unemployed
+### Unemployed
 
 ::: panel-tabset
-##### 1
+#### 1
 
 ```{r}
 #| output: asis
@@ -616,7 +616,7 @@ chunks$career_int
 chunks$unemp_challeng
 ```
 
-##### 2
+#### 2
 
 ```{r}
 #| output: asis
@@ -624,7 +624,7 @@ chunks$unemp_challeng
 chunks$unemp_miss
 ```
 
-##### 3
+#### 3
 
 ```{r}
 #| output: asis

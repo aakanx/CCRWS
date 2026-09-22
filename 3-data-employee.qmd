@@ -18,26 +18,25 @@ employee_1 <- CCRWS_Survey_2026 |>
     redcap_event_name == "event_1_arm_1",
     landing_page_complete == 2
   ) |> 
+  rename(
+    "employee_1_complete" = "form_1_complete",
+    "employee_2_1_complete" = "section_a2_role_workforce_context_35009f_complete",
+    "employee_2_2_complete" = "section_a2_role_workforce_context_complete",
+    "employee_2_3_complete" = "section_c_retention_burnout_career_intentions_complete",
+    "employee_3_complete" = "section_d_opentext_questions_complete"
+  ) |> 
   select(
     where(\(x) any(!is.na(x))),
     -c(
       redcap_event_name,
       landing_page_complete,
-      section_d_opentext_questions_complete,
       ends_with("timestamp"),
       starts_with("language"),
       columns$employee_text,
       columns$employee_notes,
-      opn_cr,
-      opn_change
+      employee_3_complete
     )
   ) |>
-  rename(
-    "employee_1_complete" = "form_1_complete",
-    "employee_2_1_complete" = "section_a2_role_workforce_context_35009f_complete",
-    "employee_2_2_complete" = "section_a2_role_workforce_context_complete",
-    "employee_2_3_complete" = "section_c_retention_burnout_career_intentions_complete"
-  ) |> 
   mutate(
     record_id = as.character(record_id),
     across(-record_id, \(x) fct_inseq(as.character(x)))

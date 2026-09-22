@@ -27,13 +27,16 @@ employer_1 <- CCRWS_Survey_2026 |>
       national_workforce_employer_survey_timestamp,
       national_workforce_employer_survey_complete,
       starts_with("language"),
-      emp_org_typ_otr,
-      emp_org_strategy
+      columns$employer_notes,
+      emp_org_typ_otr
     )
   ) |>
   mutate(
     record_id = as.character(record_id),
-    across(-record_id, \(x) fct_inseq(as.character(x)))
+    across(
+      -c(record_id, columns$employer_text_), 
+      \(x) fct_inseq(as.character(x))
+    )
   )
 ```
 
@@ -58,7 +61,6 @@ employer_2$emp_active_trial <- employer_1 |>
   select(record_id, emp_active_trial) |> 
   mutate(
     emp_active_trial = emp_active_trial |>
-      as.character() |>
       replace_values(
         "3-4" ~ "3",
         "10-15" ~ "10",
@@ -76,7 +78,6 @@ employer_2$emp_applic <- employer_1 |>
   select(record_id, emp_applic) |> 
   mutate(
     emp_applic = emp_applic |> 
-      as.character() |> 
       replace_values(
         "2-3" ~ "2",
         "4-5" ~ "4",
@@ -95,7 +96,6 @@ employer_2$emp_role_host <- employer_1 |>
   select(record_id, emp_role_host) |>
   mutate(
     emp_role_host = emp_role_host |> 
-      as.character() |> 
       replace_values(
         "18-25" ~ "21",
         "~350" ~ "350",
@@ -117,7 +117,6 @@ employer_2$emp_perm_role <- employer_1 |>
   select(record_id, emp_perm_role) |>
   mutate(
     emp_perm_role = emp_perm_role |> 
-      as.character() |> 
       replace_values(
         "2 FTE" ~ "2",
         "environ 50" ~ "50",
@@ -134,7 +133,6 @@ employer_2$emp_vacant_post <- employer_1 |>
   select(record_id, emp_vacant_post) |>
   mutate(
     emp_vacant_post = emp_vacant_post |> 
-      as.character() |> 
       replace_values(
         "between 5-10" ~ "7",
         "none" ~ NA,

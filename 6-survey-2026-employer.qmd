@@ -115,7 +115,7 @@ employer_2$emp_active_trial |>
     emp_active_trial < 11 ~ "1-10",
     emp_active_trial < 51 ~ "11-50",
     emp_active_trial < 201 ~ "51-200",
-    .default = "> 200"
+    emp_active_trial > 200 ~ "> 200"
   )) |>
   count(emp_active_trial) |> 
   mutate(
@@ -139,7 +139,7 @@ employer_2$emp_role_host |>
     emp_role_host < 11 ~ "1-10",
     emp_role_host < 101 ~ "11-100",
     emp_role_host < 1001 ~ "101-1000",
-    .default = "> 1000"
+    emp_role_host > 1000 ~ "> 1000"
   )) |> 
   count(emp_role_host) |> 
   mutate(
@@ -163,7 +163,7 @@ employer_2$emp_perm_role |>
     emp_perm_role < 1 ~ "0",
     emp_perm_role < 11 ~ "1-10",
     emp_perm_role < 101 ~ "11-100",
-    .default = "> 100"
+    emp_perm_role > 100 ~ "> 100"
   )) |> 
   count(emp_perm_role) |> 
   mutate(
@@ -186,7 +186,7 @@ employer_2$emp_perm_role |>
 employer_2$emp_vacant_post |>
   mutate(emp_vacant_post = case_when(
     emp_vacant_post == "0" ~ "No",
-    emp_vacant_post != "0" ~ "Yes"
+    emp_vacant_post > "0" ~ "Yes"
   )) |>
   count(emp_vacant_post) |>
   mutate(pct = count / sum(count)) |>
@@ -236,7 +236,7 @@ employer_2$emp_applic |>
   mutate(emp_applic = case_when(
     emp_applic < 11 ~ "0-10",
     emp_applic < 51 ~ "11-50",
-    .default = "> 50"
+    emp_applic > 50 ~ "> 50"
   )) |> 
   count(emp_applic) |> 
   mutate(
